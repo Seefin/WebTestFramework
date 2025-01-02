@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step-by-Step Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header, footer {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            flex: 1;
+            padding: 1rem;
+        }
+        .step {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .step h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <template id="step-template">
+        <div class="step">
+            <h2></h2>
+            <p></p>
+            <label>
+                Status:
+                <select class="status">
+                    <option value="pass">Pass</option>
+                    <option value="fail">Fail</option>
+                </select>
+            </label>
+            <br />
+            <label>
+                Comment:
+                <textarea class="comment"></textarea>
+            </label>
+            <br />
+            <button class="next-step">Next Step</button>
+            <button class="terminate-run hidden">Terminate Run</button>
+        </div>
+    </template>
+    <div id="statistics" class="hidden">
+        <h1>Test Run Statistics</h1>
+        <table id="stats-body">
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <header>
+        <h1>Step-by-Step Guide</h1>
+    </header>
+    <main id="content">
+        <input type="file" id="file-input" />
+    </main>
+    <footer>
+        <p>&copy; 2023 Your Company</p>
+    </footer>
+    <script>
+        class StepElement extends HTMLElement {
+            constructor() {
+                super();
+                const template = document.getElementById('step-template').content;
+                const shadowRoot = this.attachShadow({ mode: 'open' });
+                shadowRoot.appendChild(template.cloneNode(true));
+            }
+            
+            set stepData(data) {
+                this.shadowRoot.querySelector('h2').textContent = `Step ${data.step}`;
+                this.shadowRoot.querySelector('p').textContent = data.description;
+            }
+            
+            get status() {
+                return this.shadowRoot.querySelector('.status').value;
+            }
+            
+            get comment() {
+                return this.shadowRoot.querySelector('.comment').value;
+            }
+        }
+        
+        customElements.define('step-element', StepElement);
+        
+        const fileInput = document.getElementById('file-input');
+        const content = document.getElementById('content');
+        const statsBody = document.getElementById('stats-body');
+        const statistics = document.getElementById('statistics');
+        let steps = [];
+        let currentStepIndex = 0;
+        
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                steps = JSON.parse(e.target.result);
+                showStep(currentStepIndex);
+            };
+            reader.readAsText(file);
+        });
+        
+        function showStep(index) {
+            content.innerHTML = '';
+            if (index < steps.length) {
+                const stepElement = document.createElement('step-element');
+                stepElement.stepData = steps[index];
+                content.appendChild(stepElement);
+                
+                const nextButton = stepElement.shadowRoot.querySelector('.next-step');
+                const terminateButton = stepElement.shadowRoot.querySelector('.terminate-run');
+                nextButton.addEventListener('click', () => {
+                    recordStepStatus(stepElement);
+                    showStep(index + 1);
+                });
+                terminateButton.addEventListener('click', () => {
+                    recordStepStatus(stepElement);
+                    showStatistics();
+                });
+            } else {
+                showStatistics();
+            }
+        }
+        
+        function recordStepStatus(stepElement) {
+            steps[currentStepIndex].status = stepElement.status;
+            steps[currentStepIndex].comment = stepElement.comment;
+            currentStepIndex++;
+        }
+        
+        function showStatistics() {
+            content.innerHTML = '';
+            content.appendChild(statistics);
+            statistics.classList.remove('hidden');
+            const table_body = statsBody.querySelector('tbody');
+            let passCount = 0;
+            steps.forEach((step, index) => {
+                if (step.status === 'pass') {
+                    passCount++;
+                }
+            });
+            const passRate = (passCount / steps.length) * 100;
+            const summary = document.createElement('div');
+            summary.innerHTML = `
+            <h2>Test Run Summary</h2>
+            <p>Pass Rate: ${passRate.toFixed(2)}%</p>
+            <button id="toggle-details">Show Details</button>
+        `;
+            content.appendChild(summary);
+            
+            const details = document.createElement('div');
+            details.id = 'details';
+            details.classList.add('hidden');
+            steps.forEach((step, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td>Step ${index + 1}</td>
+                <td>${step.status}</td>
+                <td>${step.comment}</td>
+            `;
+                table_body.appendChild(row);
+            });
+            details.appendChild(statsBody);
+            content.appendChild(details);
+            
+            document.getElementById('toggle-details').addEventListener('click', () => {
+                details.classList.toggle('hidden');
+                const button = document.getElementById('toggle-details');
+                button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
+            });
+        }
+    </script>
+</body>
+</html>
