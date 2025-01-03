@@ -3,58 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Step-by-Step Guide</title>
+    <title>Web Test Framework</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            background-color: #f4f4f9;
+            color: #333;
         }
         header, footer {
-            background-color: #f8f9fa;
+            background-color: #007bff;
+            color: white;
             padding: 1rem;
             text-align: center;
         }
         main {
             flex: 1;
-            padding: 1rem;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
         .step {
             margin-bottom: 1rem;
             padding: 1rem;
             border: 1px solid #ccc;
             border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .step h2 {
             margin-top: 0;
             text-align: center;
+            color: #007bff;
         }
         .hidden {
             display: none;
         }
-        .not-run {
-            color: #ccc;
-            text-emphasis: italic;
+        .pass {
+            color: green;
         }
-        .step-failed {
+        .fail {
+            color: red;
+        }
+        .not-run {
+            color: grey;
+            font-style: italic;
+        }
+        .test-details {
+            font-weight: bold;
+        }
+        .step-details {
+            padding-left: 2rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
             color: white;
-            background-color: tomato;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="file"] {
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
+    <header>
+        <h1>Web Test Framework</h1>
+    </header>
+    <main id="content">
+        <input type="file" id="file-input" />
+        <button class="load-button">Load</button>
+    </main>
+    <footer>
+        <p>&copy; 2025 Connor Findlay</p>
+    </footer>
     <template id="step-template">
         <div class="step">
-            <h2 class="stepName"></h2>
+            <h2></h2>
             <p></p>
             <label>
                 Status:
                 <select class="status">
-                    <option value="Pass">Pass</option>
-                    <option value="Fail">Fail</option>
+                    <option value="pass">Pass</option>
+                    <option value="fail">Fail</option>
                 </select>
             </label>
             <br />
@@ -64,7 +134,7 @@
             </label>
             <br />
             <button class="next-step">Next Step</button>
-            <button class="terminate-run hidden">Terminate Run</button>
+            <button class="terminate-run">Terminate Run</button>
         </div>
     </template>
     <div id="statistics" class="hidden">
@@ -72,7 +142,7 @@
         <table id="stats-body">
             <thead>
                 <tr>
-                    <th>Step</th>
+                    <th>Test</th>
                     <th>Status</th>
                     <th>Comment</th>
                 </tr>
@@ -80,17 +150,6 @@
             <tbody></tbody>
         </table>
     </div>
-    <header>
-        <h1>Web Test Framework</h1>
-    </header>
-    <main id="content">
-        <input type="file" id="file-input" />
-        <button class="load-button">Load</button>
-    </main>
-    <footer>
-        <!-- Presumably we'd have a real copyright notice to put here -->
-        <p>&copy; 2025 Connor Findlay</p>
-    </footer>
     <script>
         class StepElement extends HTMLElement {
             constructor() {
@@ -99,56 +158,87 @@
                 const shadowRoot = this.attachShadow({ mode: 'open' });
                 shadowRoot.appendChild(template.cloneNode(true));
             }
-            
+
             set stepData(data) {
                 this.shadowRoot.querySelector('h2').textContent = `${data.stepName}`;
                 this.shadowRoot.querySelector('p').textContent = data.description;
             }
-            
+
             get status() {
                 return this.shadowRoot.querySelector('.status').value;
             }
-            
+
             get comment() {
                 return this.shadowRoot.querySelector('.comment').value;
             }
-
-            get stepName() {
-                return this.shadowRoot.querySelector('h2').textContent;
-            }
         }
-        
+
         customElements.define('step-element', StepElement);
-        
+
         const fileInput = document.getElementById('file-input');
-        const load_button = document.querySelector('.load-button');
+        const loadButton = document.querySelector('.load-button');
         const content = document.getElementById('content');
         const statsBody = document.getElementById('stats-body');
         const statistics = document.getElementById('statistics');
-        let steps = [];
+        let tests = [];
+        let currentTestIndex = 0;
         let currentStepIndex = 0;
-        
-        load_button.addEventListener('click', () => {
+
+        loadButton.addEventListener('click', () => {
             const file = fileInput.files[0];
-            if (file){
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    steps = JSON.parse(e.target.result);
-                    showStep(currentStepIndex);
+                    const data = JSON.parse(e.target.result);
+                    tests = data.Tests;
+                    showTestProcedure(data);
                 };
                 reader.readAsText(file);
             } else {
                 alert('Please select a file to load');
             }
         });
-        
+
+        function showTestProcedure(data) {
+            content.innerHTML = `
+                <h2>${data["Test Prodcedure"]}</h2>
+                <p><strong>Updated:</strong> ${data.Updated}</p>
+                <p><strong>Author:</strong> ${data.Author}</p>
+                <p><strong>Description:</strong> ${data.Description}</p>
+                <button id="continue-button">Continue</button>
+            `;
+            document.getElementById('continue-button').addEventListener('click', () => {
+                showTest(currentTestIndex);
+            });
+        }
+
+        function showTest(index) {
+            if (index < tests.length) {
+                const test = tests[index];
+                content.innerHTML = `
+                    <h2>${test["Test Name"]}</h2>
+                    <p><strong>Preconditions:</strong></p>
+                    <ul>${test["Test Preconditions"].map(cond => `<li>${cond}</li>`).join('')}</ul>
+                    <p><strong>Postconditions:</strong></p>
+                    <ul>${test["Test Postconditions"].map(cond => `<li>${cond}</li>`).join('')}</ul>
+                    <button id="begin-button">Begin</button>
+                `;
+                document.getElementById('begin-button').addEventListener('click', () => {
+                    showStep(0);
+                });
+            } else {
+                showStatistics();
+            }
+        }
+
         function showStep(index) {
             content.innerHTML = '';
-            if (index < steps.length) {
+            if (index < tests[currentTestIndex]["Test Steps"].length) {
                 const stepElement = document.createElement('step-element');
-                stepElement.stepData = steps[index];
+                stepElement.stepData = tests[currentTestIndex]["Test Steps"][index];
+                content.innerHTML = `<h2>${tests[currentTestIndex]["Test Name"]}</h2>`;
                 content.appendChild(stepElement);
-                
+
                 const nextButton = stepElement.shadowRoot.querySelector('.next-step');
                 const terminateButton = stepElement.shadowRoot.querySelector('.terminate-run');
                 nextButton.addEventListener('click', () => {
@@ -160,13 +250,15 @@
                     showStatistics();
                 });
             } else {
-                showStatistics();
+                currentTestIndex++;
+                currentStepIndex = 0;
+                showTest(currentTestIndex);
             }
         }
         
         function recordStepStatus(stepElement) {
-            steps[currentStepIndex].status = stepElement.status;
-            steps[currentStepIndex].comment = stepElement.comment;
+            tests[currentTestIndex]["Test Steps"][currentStepIndex].status = stepElement.status;
+            tests[currentTestIndex]["Test Steps"][currentStepIndex].comment = stepElement.comment;
             currentStepIndex++;
         }
         
@@ -175,44 +267,56 @@
             content.appendChild(statistics);
             statistics.classList.remove('hidden');
             const table_body = statsBody.querySelector('tbody');
+            table_body.innerHTML = '';
             let passCount = 0;
-            steps.forEach((step) => {
-                if (step.status === 'Pass') {
-                    passCount++;
-                }
+            tests.forEach(test => {
+                test["Test Steps"].forEach(step => {
+                    if (step.status === 'pass') {
+                        passCount++;
+                    }
+                });
             });
-            const passRate = (passCount / steps.length) * 100;
+            const passRate = (passCount / tests.reduce((acc, test) => acc + test["Test Steps"].length, 0)) * 100;
             const summary = document.createElement('div');
             summary.innerHTML = `
-            <h2>Test Run Summary</h2>
-            <p>Pass Rate: ${passRate.toFixed(2)}%</p>
-            <button id="toggle-details">Show Details</button>
-        `;
+                <h2>Test Run Summary</h2>
+                <p>Pass Rate: ${passRate.toFixed(2)}%</p>
+                <button id="toggle-details">Show Details</button>
+            `;
             content.appendChild(summary);
-            
+
             const details = document.createElement('div');
             details.id = 'details';
             details.classList.add('hidden');
-            steps.forEach((step) => {
-                const status = step.status !== undefined ? step.status : 'Not Run';
-                const comment = step.comment !== undefined ? step.comment : 'Not Run';
-                const stepName = step.stepName !== undefined ? step.stepName : 'error';
-                const row = document.createElement('tr');
-                if (step.status === undefined) {
-                    row.classList.add('not-run');
-                } else if (step.status === 'Fail') {
-                    row.classList.add('step-failed');
+            tests.forEach((test, testIndex) => {
+                const testRow = document.createElement('tr');
+                const testStatus = test["Test Steps"].some(step => step.status === 'fail') ? 'fail' : test["Test Steps"].some(step => step.status === undefined) ? 'not-run' : 'pass';
+                testRow.classList.add(testStatus === 'pass' ? 'pass' : testStatus === 'not-run' ? 'not-run' : 'fail');
+                testRow.classList.add('test-details');
+                testRow.innerHTML = `
+                    <td colspan="3">${test["Test Name"]}</td>
+                `;
+                statsBody.appendChild(testRow);
+
+                if (testStatus === 'fail') {
+                    test["Test Steps"].forEach((step, stepIndex) => {
+                        const stepStatus = step.status !== undefined ? step.status : 'Not Applicable';
+                        const stepComment = step.comment !== undefined ? step.comment : 'Not Applicable';
+                        const stepRow = document.createElement('tr');
+                        stepRow.classList.add('step-details');
+                        stepRow.classList.add(stepStatus === 'fail' ? 'fail' : 'not-run');
+                        stepRow.innerHTML = `
+                            <td>Step ${step.stepName}</td>
+                            <td>${stepStatus}</td>
+                            <td>${stepComment}</td>
+                        `;
+                        statsBody.appendChild(stepRow);
+                    });
                 }
-                row.innerHTML = `
-                <td>${stepName}</td>
-                <td>${status}</td>
-                <td>${comment}</td>
-            `;
-                table_body.appendChild(row);
             });
             details.appendChild(statsBody);
             content.appendChild(details);
-            
+
             document.getElementById('toggle-details').addEventListener('click', () => {
                 details.classList.toggle('hidden');
                 const button = document.getElementById('toggle-details');
