@@ -136,10 +136,7 @@ function showStatistics() {
     details.id = 'details';
     details.classList.add('hidden');
     const testHeader = document.createElement('tr');
-    testHeader.innerHTML = `
-        <th colspan="2">Test Name</th>
-        <th>Status</th>
-    `;
+    testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
     statsBody.appendChild(testHeader);
     tests.forEach((test, testIndex) => {
         const testRow = document.createElement('tr');
