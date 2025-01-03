@@ -35,18 +35,26 @@
         .hidden {
             display: none;
         }
+        .not-run {
+            color: #ccc;
+            text-emphasis: italic;
+        }
+        .step-failed {
+            color: white;
+            background-color: tomato;
+        }
     </style>
 </head>
 <body>
     <template id="step-template">
         <div class="step">
-            <h2></h2>
+            <h2 class="stepName"></h2>
             <p></p>
             <label>
                 Status:
                 <select class="status">
-                    <option value="pass">Pass</option>
-                    <option value="fail">Fail</option>
+                    <option value="Pass">Pass</option>
+                    <option value="Fail">Fail</option>
                 </select>
             </label>
             <br />
@@ -73,13 +81,15 @@
         </table>
     </div>
     <header>
-        <h1>Step-by-Step Guide</h1>
+        <h1>Web Test Framework</h1>
     </header>
     <main id="content">
         <input type="file" id="file-input" />
+        <button class="load-button">Load</button>
     </main>
     <footer>
-        <p>&copy; 2023 Your Company</p>
+        <!-- Presumably we'd have a real copyright notice to put here -->
+        <p>&copy; 2025 Connor Findlay</p>
     </footer>
     <script>
         class StepElement extends HTMLElement {
@@ -91,7 +101,7 @@
             }
             
             set stepData(data) {
-                this.shadowRoot.querySelector('h2').textContent = `Step ${data.step}`;
+                this.shadowRoot.querySelector('h2').textContent = `${data.stepName}`;
                 this.shadowRoot.querySelector('p').textContent = data.description;
             }
             
@@ -102,25 +112,34 @@
             get comment() {
                 return this.shadowRoot.querySelector('.comment').value;
             }
+
+            get stepName() {
+                return this.shadowRoot.querySelector('h2').textContent;
+            }
         }
         
         customElements.define('step-element', StepElement);
         
         const fileInput = document.getElementById('file-input');
+        const load_button = document.querySelector('.load-button');
         const content = document.getElementById('content');
         const statsBody = document.getElementById('stats-body');
         const statistics = document.getElementById('statistics');
         let steps = [];
         let currentStepIndex = 0;
         
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                steps = JSON.parse(e.target.result);
-                showStep(currentStepIndex);
-            };
-            reader.readAsText(file);
+        load_button.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (file){
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    steps = JSON.parse(e.target.result);
+                    showStep(currentStepIndex);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please select a file to load');
+            }
         });
         
         function showStep(index) {
@@ -157,8 +176,8 @@
             statistics.classList.remove('hidden');
             const table_body = statsBody.querySelector('tbody');
             let passCount = 0;
-            steps.forEach((step, index) => {
-                if (step.status === 'pass') {
+            steps.forEach((step) => {
+                if (step.status === 'Pass') {
                     passCount++;
                 }
             });
@@ -174,12 +193,20 @@
             const details = document.createElement('div');
             details.id = 'details';
             details.classList.add('hidden');
-            steps.forEach((step, index) => {
+            steps.forEach((step) => {
+                const status = step.status !== undefined ? step.status : 'Not Run';
+                const comment = step.comment !== undefined ? step.comment : 'Not Run';
+                const stepName = step.stepName !== undefined ? step.stepName : 'error';
                 const row = document.createElement('tr');
+                if (step.status === undefined) {
+                    row.classList.add('not-run');
+                } else if (step.status === 'Fail') {
+                    row.classList.add('step-failed');
+                }
                 row.innerHTML = `
-                <td>Step ${index + 1}</td>
-                <td>${step.status}</td>
-                <td>${step.comment}</td>
+                <td>${stepName}</td>
+                <td>${status}</td>
+                <td>${comment}</td>
             `;
                 table_body.appendChild(row);
             });

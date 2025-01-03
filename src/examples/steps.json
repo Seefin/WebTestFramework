@@ -1,5 +1,5 @@
 [
-    { "step": 1, "description": "Step 1: Do this first.", "active": true },
-    { "step": 2, "description": "Step 2: Do this next." },
-    { "step": 3, "description": "Step 3: Finally, do this." }
+    { "step": 1, "stepName":"Step 1", "description": "Do this first."},
+    { "step": 2, "stepName":"Step 2", "description": "Do this next." },
+    { "step": 3, "stepName":"Step 3", "description": "Finally, do this." }
 ]
