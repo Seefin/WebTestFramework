@@ -88,6 +88,9 @@
         tr:hover {
             background-color: #f1f1f1;
         }
+        .test-step-header {
+            background-color: #80bcfd;
+        }
         button {
             background-color: #007bff;
             color: white;
@@ -282,6 +285,12 @@
             const details = document.createElement('div');
             details.id = 'details';
             details.classList.add('hidden');
+            const testHeader = document.createElement('tr');
+            testHeader.innerHTML = `
+                <th colspan="2">Test Name</th>
+                <th>Status</th>
+            `;
+            statsBody.appendChild(testHeader);
             tests.forEach((test, testIndex) => {
                 const testRow = document.createElement('tr');
                 const testStatus = test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined) ? 'not-run' : 'Pass';
@@ -301,6 +310,7 @@
                         <th>Status</th>
                         <th>Comment</th>
                     `;
+                    Array.from(testHeaderRow.children).forEach((child)=>{child.classList.add('test-step-header');});
                     statsBody.appendChild(testHeaderRow);
                     test["Test Steps"].forEach((step, stepIndex) => {
                         const stepStatus = step.status !== undefined ? step.status : 'Not Applicable';
