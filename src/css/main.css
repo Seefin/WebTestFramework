@@ -121,3 +121,31 @@ input[type="file"] {
     border-radius: 4px;
     margin-bottom: 20px;
 }
+@media print {
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .report-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .report-section {
+        margin-bottom: 20px;
+    }
+    .report-section h2 {
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .report-table th, .report-table td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: left;
+    }
+    .signature {
+        margin-top: 40px;
+    }
+}

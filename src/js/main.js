@@ -72,6 +72,7 @@ const statistics = document.getElementById('statistics');
 var tests = [];
 let currentTestIndex = 0;
 let currentStepIndex = 0;
+let testProcedure = {};
 
 //Process the file selected by the user
 loadButton.addEventListener('click', () => {
@@ -79,9 +80,9 @@ loadButton.addEventListener('click', () => {
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const data = JSON.parse(e.target.result);
-            tests = data.Tests;
-            showTestProcedure(data);
+            testProcedure = JSON.parse(e.target.result);
+            tests = testProcedure.Tests;
+            showTestProcedure(testProcedure);
         };
         reader.readAsText(file);
     } else {
@@ -375,6 +376,7 @@ function showStatistics() {
             : ''}
         <p>Pass Rate: ${passRate.toFixed(2)}%</p>
         <button id="toggle-details">Show Details</button>
+        <button id="print-report-button" class="button">Print Report</button>
     `;
     content.appendChild(summary);
     
@@ -455,6 +457,9 @@ function showStatistics() {
         const button = document.getElementById('toggle-details');
         button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
     });
+
+    //Add event listener to print report button
+    document.getElementById('print-report-button').addEventListener('click', printReport);
 }
 
 //Handle variables in tests
@@ -541,3 +546,66 @@ function replaceVariables(text) {
     });
 }
 
+/**
+* Generates a printable report of the test session.
+*
+* This function creates a new window with the test session details formatted for printing.
+* The report includes the test procedure details, test steps, their status, and a space for the tester to sign.
+*
+* @returns {void}
+*/
+function printReport() {
+    const reportWindow = window.open('', '_blank');
+    const reportContent = `
+        <html>
+        <head>
+            <title>Test Report</title>
+            <link rel="stylesheet" type="text/css" href="css/main.css">
+        </head>
+        <body>
+            <div class="report-header">
+                <h1>Manual Test Report</h1>
+                <p>Procedure Run Date: ${new Date().toLocaleString()}</p>
+            </div>
+            <div class="report-section">
+                <h2>Test Procedure Details</h2>
+                <p><strong>Procedure:</strong> ${testProcedure["Test Procedure"]}</p>
+                <p><strong>Author:</strong> ${testProcedure["Author"]}</p>
+                <p><strong>Description:</strong> ${testProcedure["Description"]}</p>
+            </div>
+            <div class="report-section">
+                <h2>Test Results</h2>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Step</th>
+                            <th>Status</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${selectedTests.map(testIndex => {
+                            const test = tests[testIndex];
+                            return test["Test Steps"].map((step, stepIndex) => `
+                                <tr>
+                                    <td>${test["Test Name"]}</td>
+                                    <td>${step.stepName}</td>
+                                    <td>${step.status || 'N/A'}</td>
+                                    <td>${step.comment || ''}</td>
+                                </tr>
+                            `).join('');
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="signature">
+                <p>Tester Signature: ___________________________</p>
+            </div>
+        </body>
+        </html>
+    `;
+    reportWindow.document.write(reportContent);
+    reportWindow.document.close();
+    reportWindow.print();
+}
