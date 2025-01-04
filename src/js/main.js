@@ -63,7 +63,7 @@ loadButton.addEventListener('click', () => {
 
 function showTestProcedure(data) {
     content.innerHTML = `
-        <h2>${data["Test Prodcedure"]}</h2>
+        <h2>${data["Test Procedure"]}</h2>
         <p><strong>Updated:</strong> ${data.Updated}</p>
         <p><strong>Author:</strong> ${data.Author}</p>
         <p><strong>Description:</strong> ${data.Description}</p>
