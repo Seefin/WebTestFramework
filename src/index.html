@@ -18,24 +18,69 @@
         <p>&copy; 2025 Connor Findlay</p>
     </footer>
     <template id="step-template">
+        <!-- This has to be here because Shadow DOM doesn't use the CSS 
+             defined for the light DOM
+         -->
+        <style>
+            button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1rem;
+                margin-top: 1rem;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            .radio-group {
+                margin: 1rem 0;
+                display: flex;
+                gap: 1rem;
+            }
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+            }
+            .radio-label input[type="radio"] {
+                appearance: none;
+                width: 1.2rem;
+                height: 1.2rem;
+                border: 2px solid #007bff;
+                border-radius: 50%;
+                margin: 0;
+            }
+            .radio-label input[type="radio"]:checked {
+                background-color: #007bff;
+                box-shadow: inset 0 0 0 3px white;
+            }
+            .radio-label:hover input[type="radio"] {
+                border-color: #0056b3;
+            }
+        </style>
         <div class="step">
             <h2></h2>
             <p></p>
-            <label>
-                Status:
-                <select class="status">
-                    <option value="Pass">Pass</option>
-                    <option value="Fail">Fail</option>
-                </select>
-            </label>
-            <br />
-            <label>
-                Comment:
-                <textarea class="comment"></textarea>
-            </label>
-            <br />
-            <button class="next-step">Next Step</button>
-            <button class="terminate-run">Terminate Run</button>
+            <div class="radio-group">
+                <label  class="radio-label">
+                    <input type="radio" name="status" id="Pass" class="status"> Pass
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="status" id="Fail" class="status"> Fail
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="status" id="not-run" class="status"> Skip
+                </label>
+            </div>
+            <textarea class="comment" placeholder="Enter any comments here"></textarea>
+            <div class="button-group">
+                <button class="next-step">Next Step</button>
+                <button class="terminate-run">Terminate Run</button>
+            </div>
         </div>
     </template>
     <div id="statistics" class="hidden">

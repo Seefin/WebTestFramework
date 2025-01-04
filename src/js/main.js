@@ -1,18 +1,33 @@
 class StepElement extends HTMLElement {
     constructor() {
-        super();
+        //Don't do anything in here, do it in connectedCallback. Any code in
+        // here can ONLY manipulate the shadow DOM, not the light DOM.
+        super(); 
+        this.attachShadow({mode: 'open'});
+    }
+    
+    connectedCallback() {
+        //Get the HTML template fragment and append it to our shadow DOM
         const template = document.getElementById('step-template').content;
-        const shadowRoot = this.attachShadow({ mode: 'open' });
-        shadowRoot.appendChild(template.cloneNode(true));
+        this.shadowRoot.appendChild(template.cloneNode(true));
+
+        //Update the content of the shadow DOM copy with this element's info
+        this.shadowRoot.querySelector('h2').textContent = `${this.stepName}`;
+        this.shadowRoot.querySelector('p').textContent = `${this.stepDescription}`;
+
+        //Get references to the buttons for later use
+        this.nextButton = this.shadowRoot.querySelector('.next-step');
+        this.terminateButton = this.shadowRoot.querySelector('.terminate-run');
+
     }
     
-    set stepData(data) {
-        this.shadowRoot.querySelector('h2').textContent = `${data.stepName}`;
-        this.shadowRoot.querySelector('p').textContent = data.description;
+    set stepData(data) {;
+        this.stepName = data.stepName;
+        this.stepDescription = data.description;
     }
-    
+
     get status() {
-        return this.shadowRoot.querySelector('.status').value;
+        return this.shadowRoot.querySelector('input[name="status"]:checked').id;
     }
     
     get comment() {
@@ -89,21 +104,26 @@ function showTest(index) {
 function showStep(index) {
     content.innerHTML = '';
     if (index < tests[currentTestIndex]["Test Steps"].length) {
+        // Add the step name
+        const testHeader = document.createElement('h2');
+        testHeader.textContent = tests[currentTestIndex]["Test Name"];
+        content.appendChild(testHeader);
+        
+        //Create and configure step element
         const stepElement = document.createElement('step-element');
-        //Handle any variable replacing in the step description
         const stepData = {...tests[currentTestIndex]["Test Steps"][index]};
         stepData.description = replaceVariables(stepData.description);
         stepElement.stepData = stepData;
-        content.innerHTML = `<h2>${tests[currentTestIndex]["Test Name"]}</h2>`;
+        
+        //Add the new element to the page
         content.appendChild(stepElement);
         
-        const nextButton = stepElement.shadowRoot.querySelector('.next-step');
-        const terminateButton = stepElement.shadowRoot.querySelector('.terminate-run');
-        nextButton.addEventListener('click', () => {
+        //Add event listeners to the buttons
+        stepElement.nextButton.addEventListener('click', () => {
             recordStepStatus(stepElement);
             showStep(index + 1);
         });
-        terminateButton.addEventListener('click', () => {
+        stepElement.terminateButton.addEventListener('click', () => {
             recordStepStatus(stepElement);
             showStatistics();
         });
@@ -226,6 +246,7 @@ function collectVariables(test) {
             ${test["Test Variables"].map(variable => `
                 <label for="${variable}">${variable}</label>
                 <input type="text" name="${variable}" id="${variable}" required>
+                <br />
             `).join('')}
             <button type="submit">Continue</button>
         </form>
