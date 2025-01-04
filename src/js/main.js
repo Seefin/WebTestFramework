@@ -62,16 +62,24 @@ function showTestProcedure(data) {
 function showTest(index) {
     if (index < tests.length) {
         const test = tests[index];
-        content.innerHTML = `
+        
+        //Collect and handle variables
+        collectVariables(test).then(() => {
+            const preconditions = test["Test Preconditions"].map(replaceVariables);
+            const postconditions = test["Test Postconditions"].map(replaceVariables);
+            
+            content.innerHTML = `
             <h2>${test["Test Name"]}</h2>
             <p><strong>Preconditions:</strong></p>
-            <ul>${test["Test Preconditions"].map(cond => `<li>${cond}</li>`).join('')}</ul>
+            <ul>${preconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
             <p><strong>Postconditions:</strong></p>
-            <ul>${test["Test Postconditions"].map(cond => `<li>${cond}</li>`).join('')}</ul>
+            <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
             <button id="begin-button">Begin</button>
-        `;
-        document.getElementById('begin-button').addEventListener('click', () => {
-            showStep(0);
+            `;
+            
+            document.getElementById('begin-button').addEventListener('click', () => {
+                showStep(0);
+            });
         });
     } else {
         showStatistics();
@@ -82,7 +90,10 @@ function showStep(index) {
     content.innerHTML = '';
     if (index < tests[currentTestIndex]["Test Steps"].length) {
         const stepElement = document.createElement('step-element');
-        stepElement.stepData = tests[currentTestIndex]["Test Steps"][index];
+        //Handle any variable replacing in the step description
+        const stepData = {...tests[currentTestIndex]["Test Steps"][index]};
+        stepData.description = replaceVariables(stepData.description);
+        stepElement.stepData = stepData;
         content.innerHTML = `<h2>${tests[currentTestIndex]["Test Name"]}</h2>`;
         content.appendChild(stepElement);
         
@@ -198,3 +209,51 @@ function showStatistics() {
         button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
     });
 }
+
+//Handle variables in tests
+const testVariables = new Map();
+
+function collectVariables(test) {
+    if (!test["Test Variables"]){
+        //This test has no variables
+        return Promise.resolve();
+    }
+    
+    const form = document.createElement('div');
+    form.innerHTML = `
+        <h3>This test requires the following values:</h3>
+        <form id="variable-form">
+            ${test["Test Variables"].map(variable => `
+                <label for="${variable}">${variable}</label>
+                <input type="text" name="${variable}" id="${variable}" required>
+            `).join('')}
+            <button type="submit">Continue</button>
+        </form>
+    `;
+    
+    content.innerHTML = '';
+    content.appendChild(form);  
+    
+    return new Promise((resolve) => {
+        document.getElementById('variable-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            testVariables.clear();
+            for (const pair of formData.entries()) {
+                testVariables.set(pair[0], pair[1]);
+            }
+            resolve();
+        });
+    });
+}
+
+function replaceVariables(text) {
+    if (!text){
+        //Input is null or undefined
+        return text;
+    }
+    return text.replace(/{{(\w+)}}/g, (match, variable) => {
+        return testVariables.get(variable) || match;
+    });
+}
+
