@@ -1,0 +1,68 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Test Procedure": {
+            "type": "string"
+        },
+        "Updated": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "Author": {
+            "type": "string"
+        },
+        "Description": {
+            "type": "string"
+        },
+        "Tests": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Test Name": {
+                        "type": "string"
+                    },
+                    "Test Preconditions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "Test Postconditions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "Test Variables": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "Test Steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "step": {
+                                    "type": "integer"
+                                },
+                                "stepName": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["step", "stepName", "description"]
+                        }
+                    }
+                },
+                "required": ["Test Name", "Test Steps"]
+            }
+        }
+    },
+    "required": ["Test Procedure", "Updated", "Author", "Description", "Tests"]
+}

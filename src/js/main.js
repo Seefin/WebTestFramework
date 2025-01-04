@@ -220,18 +220,19 @@ let selectedTests = [];
     * showTest(0);
     */
     function showStep(index) {
+        const selectedTest = tests[selectedTests[currentTestIndex]];
         content.innerHTML = '';
-        if (!tests[currentTestIndex]){
+        if (!selectedTest){
             showStatistics();
-        } else if (index < tests[currentTestIndex]["Test Steps"].length && index >= 0) {
+        } else if (index < selectedTest["Test Steps"].length && index >= 0) {
             // Add the step name
             const testHeader = document.createElement('h2');
-            testHeader.textContent = tests[currentTestIndex]["Test Name"];
+            testHeader.textContent = selectedTest["Test Name"];
             content.appendChild(testHeader);
             
             //Create and configure step element
             const stepElement = document.createElement('step-element');
-            const stepData = { ...tests[currentTestIndex]["Test Steps"][index] };
+            const stepData = { ...selectedTest["Test Steps"][index] };
             stepData.description = replaceVariables(stepData.description);
             stepElement.stepData = stepData;
             
@@ -270,15 +271,16 @@ let selectedTests = [];
     * @throws {Error} If the current test or step index is out of bounds.
     */
     function recordStepStatus(stepElement) {
+        const selectedTest = tests[selectedTests[currentTestIndex]];
         // Check if the current step index is within the bounds of the test steps array
-        if (currentStepIndex < tests[currentTestIndex]["Test Steps"].length) {
+        if (currentStepIndex < selectedTest["Test Steps"].length) {
             // Get the status and comment from the step element
             const status = stepElement.status;
             const comment = stepElement.comment;
             
             // Update the status and comment of the current test step
-            tests[currentTestIndex]["Test Steps"][currentStepIndex].status = status;
-            tests[currentTestIndex]["Test Steps"][currentStepIndex].comment = comment;
+            selectedTest["Test Steps"][currentStepIndex].status = status;
+            selectedTest["Test Steps"][currentStepIndex].comment = comment;
             
             // Increment the current step index to move to the next step
             currentStepIndex++;
@@ -339,9 +341,12 @@ let selectedTests = [];
         }
         table_body.innerHTML = '';
         
-        //Count Passed Steps
+        //Count Steps
         let passCount = 0;
-        tests.forEach(test => {
+        let totalSteps = 0;
+
+        selectedTests.forEach(testIndex => {
+            const test = tests[testIndex];
             if (!test["Test Steps"] || !Array.isArray(test["Test Steps"]) || test["Test Steps"].length === 0) {
                 console.error(`Test steps are missing or not an array for test: ${test["Test Name"]}`);
                 return;
@@ -351,15 +356,9 @@ let selectedTests = [];
                     passCount++;
                 }
             });
+            totalSteps += test["Test Steps"].length;
         });
         
-        //Calculate total steps
-        const totalSteps = tests.reduce((acc, test) => {
-            if (Array.isArray(test["Test Steps"])) {
-                return acc + test["Test Steps"].length;
-            }
-            return acc;
-        }, 0);
         if (totalSteps === 0) {
             //No steps to display
             console.error('No test steps found.');
@@ -388,10 +387,11 @@ let selectedTests = [];
         //Create and append table header
         const testHeader = document.createElement('tr');
         testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
-        const testStatus =  tests.forEach(test => { test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined || step.status === 'not-run') ? 'not-run' : 'Pass'});
+        statsBody.appendChild(testHeader);
         
         //Create and append table body
-        tests.forEach((test) => {
+        selectedTests.forEach((testIndex) => {
+            const test = tests[testIndex];
             const testRow = document.createElement('tr');
             const testStatus = test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined) ? 'not-run' : 'Pass';
             const overallStatus = testStatus === 'Pass' ? 'Pass' : testStatus === 'Fail' ? 'Fail' : 'Not Run';

@@ -1,4 +1,5 @@
 {
+    "$schema":"https://test.findlays.io/public/WebTestFramework.json",
     "Test Procedure": "TP 01 - Check Things",
     "Updated": "2025-01-03",
     "Author": "Connor F",
