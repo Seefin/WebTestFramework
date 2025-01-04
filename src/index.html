@@ -18,8 +18,10 @@
         <p>&copy; 2025 Connor Findlay</p>
     </footer>
     <template id="step-template">
-        <!-- This has to be here because Shadow DOM doesn't use the CSS 
-             defined for the light DOM
+        <!-- This template is necessary because the Shadow DOM encapsulates styles,
+             meaning it does not inherit CSS defined in the light DOM. Including the 
+             styles here ensures that the elements within the Shadow DOM are styled 
+             correctly.
          -->
         <style>
             button {
