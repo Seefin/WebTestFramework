@@ -89,6 +89,8 @@ loadButton.addEventListener('click', () => {
     }
 });
 
+let selectedTests = [];
+
 /**
 * Displays the test procedure details on the page.
 *
@@ -110,13 +112,46 @@ loadButton.addEventListener('click', () => {
 */
 function showTestProcedure(data) {
     content.innerHTML = `
-        <h2>${data["Test Procedure"]}</h2>
+        <h2>Test Procedure</h2>
         <p><strong>Updated:</strong> ${data.Updated}</p>
         <p><strong>Author:</strong> ${data.Author}</p>
         <p><strong>Description:</strong> ${data.Description}</p>
-        <button id="continue-button">Continue</button>
+        <div class="test-selection">
+            ${tests.map((test, index) => `
+                <div class="test-checkbox">
+                    <input type="checkbox" id="test-${index}" checked>
+                    <label for="test-${index}">${test["Test Name"]}</label>
+                </div>
+            `).join('')}
+        </div>
+        <button id="continue-button" class="button">Continue</button>
     `;
-    document.getElementById('continue-button').addEventListener('click', () => {
+
+    const checkboxes = document.querySelectorAll('.test-checkbox input');
+    const beginButton = document.getElementById('continue-button');
+    
+    // Initialize selectedTests
+    selectedTests = tests.map((_, index) => index);
+
+    // Handle checkbox changes
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                selectedTests.push(index);
+            } else {
+                selectedTests = selectedTests.filter(i => i !== index);
+            }
+            beginButton.disabled = selectedTests.length === 0;
+        });
+    });
+
+    beginButton.addEventListener('click', () => {
+        if (selectedTests.length === 0) {
+            alert('Please select at least one test to run');
+            return;
+        }
+        currentTestIndex = 0;
+        currentStepIndex = 0;
         showTest(currentTestIndex);
     });
 }
@@ -138,40 +173,35 @@ function showTestProcedure(data) {
 * showTest(0);
 */
 function showTest(index) {
-    if (typeof index !== 'number' || index < 0 || index >= tests.length) {
+    if (typeof index !== 'number' || index < 0 || index >= selectedTests.length) {
         console.error('Invalid index:', index);
         content.innerHTML = `<p>Invalid test index. Please select a valid test.</p>`;
         return;
     }
-
-    if (index < tests.length) {
-        const test = tests[index];
+    const test = tests[selectedTests[index]];
+    
+    //Collect and handle variables
+    collectVariables(test).then(() => {
+        const preconditions = test["Test Preconditions"].map(replaceVariables);
+        const postconditions = test["Test Postconditions"].map(replaceVariables);
         
-        //Collect and handle variables
-        collectVariables(test).then(() => {
-            const preconditions = test["Test Preconditions"].map(replaceVariables);
-            const postconditions = test["Test Postconditions"].map(replaceVariables);
-            
-            content.innerHTML = `
-            <h2>${test["Test Name"]}</h2>
-            <p><strong>Preconditions:</strong></p>
-            <ul>${preconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
-            <p><strong>Postconditions:</strong></p>
-            <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
-            <button id="begin-button">Begin</button>
-            `;
-            
-            document.getElementById('begin-button').addEventListener('click', () => {
-                showStep(0);
-            });
-        })
-        .catch((error) => {
-            console.error('Error collecting variables:', error);
-            content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
+        content.innerHTML = `
+        <h2>${test["Test Name"]}</h2>
+        <p><strong>Preconditions:</strong></p>
+        <ul>${preconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
+        <p><strong>Postconditions:</strong></p>
+        <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
+        <button id="begin-button">Begin</button>
+        `;
+        
+        document.getElementById('begin-button').addEventListener('click', () => {
+            showStep(0);
         });
-    } else {
-        showStatistics();
-    }
+    })
+    .catch((error) => {
+        console.error('Error collecting variables:', error);
+        content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
+    });
 }
 
 /**
@@ -190,7 +220,9 @@ function showTest(index) {
 */
 function showStep(index) {
     content.innerHTML = '';
-    if (tests[currentTestIndex] && index < tests[currentTestIndex]["Test Steps"].length && index >= 0) {
+    if (!tests[currentTestIndex]){
+        showStatistics();
+    } else if (index < tests[currentTestIndex]["Test Steps"].length && index >= 0) {
         // Add the step name
         const testHeader = document.createElement('h2');
         testHeader.textContent = tests[currentTestIndex]["Test Name"];
@@ -217,7 +249,11 @@ function showStep(index) {
     } else {
         currentTestIndex++;
         currentStepIndex = 0;
-        showTest(currentTestIndex);
+        if (currentTestIndex < selectedTests.length) {
+            showTest(currentTestIndex);
+        } else {
+            showStatistics();
+        }
     }
 }
 
@@ -333,7 +369,10 @@ function showStatistics() {
     const passRate = (passCount / totalSteps) * 100;
     const summary = document.createElement('div');
     summary.innerHTML = `
-        <h2>Test Run Summary</h2>
+        <h2>Test Summary</h2>
+           ${selectedTests.length < tests.length ? 
+            `<p class="partial-run-notice">Completed ${selectedTests.length} of ${tests.length} total tests</p>` 
+            : ''}
         <p>Pass Rate: ${passRate.toFixed(2)}%</p>
         <button id="toggle-details">Show Details</button>
     `;
@@ -347,7 +386,7 @@ function showStatistics() {
     //Create and append table header
     const testHeader = document.createElement('tr');
     testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
-    const testStatus = test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined || step.status === 'Not Applicable') ? 'not-run' : 'Pass';
+    const testStatus =  tests.forEach(test => { test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined || step.status === 'Not Applicable') ? 'not-run' : 'Pass'});
     
     //Create and append table body
     tests.forEach((test) => {

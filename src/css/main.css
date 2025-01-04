@@ -103,3 +103,21 @@ input[type="file"] {
 .step-container {
     width: 100%;
 }
+.test-selection {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.test-checkbox {
+    margin: 10px 0;
+}
+.test-checkbox label {
+    margin-left: 8px;
+}
+.partial-run-notice {
+    background: #fff3cd;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
