@@ -388,7 +388,7 @@ function showStatistics() {
     //Create and append table header
     const testHeader = document.createElement('tr');
     testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
-    const testStatus =  tests.forEach(test => { test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined || step.status === 'Not Applicable') ? 'not-run' : 'Pass'});
+    const testStatus =  tests.forEach(test => { test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined || step.status === 'not-run') ? 'not-run' : 'Pass'});
     
     //Create and append table body
     tests.forEach((test) => {
@@ -481,39 +481,37 @@ const testVariables = new Map();
 * });
 */
 function collectVariables(test) {
-    if (!test["Test Variables"] || !Array.isArray(test["Test Variables"])) {
-        //This test has no variables
-        return Promise.resolve();
-    }
-    
-    //Create a form to collect variables from the user
-    const form = document.createElement('div');
-    form.innerHTML = `
-        <h3>This test requires the following values:</h3>
-        <form id="variable-form">
-            ${test["Test Variables"].map(variable => `
-                <label for="${variable}">${variable}</label>
-                <input type="text" name="${variable}" id="${variable}" required>
-                <br />
-            `).join('')}
-            <button type="submit">Continue</button>
-        </form>
-    `;
-    
-    //Add the form to the content area
-    content.innerHTML = '';
-    content.appendChild(form);
-    
-    //Add event listener to the form, resolve the promise when submitted
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        const variables = test["Test Variables"];
+        if (!variables || variables.length === 0) {
+            resolve();
+            return;
+        }
+
+        const variableInputs = variables.map(v => `
+            <div class="variable-input-row">
+                <label for="${v}">${v}</label>
+                <input type="text" id="${v}" name="${v}" required>
+            </div>
+        `).join('');
+
+        content.innerHTML = `
+            <form id="variable-form" class="variable-input-container">
+                <h2>This test requires the following information:</h2>
+                ${variableInputs}
+                <button type="submit" class="button">Save</button>
+            </form>
+        `;
+
         document.getElementById('variable-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            //Collect the form data and store it in the testVariables map
-            const formData = new FormData(e.target);
             testVariables.clear();
-            for (const pair of formData.entries()) {
-                testVariables.set(pair[0], pair[1]);
-            }
+            variables.forEach(v => {
+                const input = document.getElementById(v);
+                if (input) {
+                    testVariables.set(v, input.value);
+                }
+            });
             resolve();
         });
     });
@@ -540,7 +538,9 @@ function replaceVariables(text) {
     }
     return text.replace(/{{(\w+)}}/g, (match, variable) => {
         if (testVariables && testVariables.size > 0) {
-            return testVariables.get(variable) || match;
+            if (testVariables.has(variable)) {
+                return testVariables.get(variable);
+            }
         }
         return match;
     });
