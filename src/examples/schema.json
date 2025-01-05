@@ -54,6 +54,12 @@
                                 },
                                 "description": {
                                     "type": "string"
+                                },
+                                "requireNote": {
+                                    "type": "boolean"
+                                },
+                                "notePrompt": {
+                                    "type": "string"
                                 }
                             },
                             "required": ["step", "stepName", "description"]
