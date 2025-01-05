@@ -1,0 +1,60 @@
+{
+    "$schema":"https://test.findlays.io/public/WebTestFramework.json",
+    "Test Procedure": "TP-01 - Check Accounts Module",
+    "Updated": "2025-01-03",
+    "Author": "Connor F",
+    "Description": "Performs tests of the accounts module",
+    "Tests": [
+        {
+            "Test Name": "User can gain access to a connected account",
+            "Test Preconditions": [
+                "User {{username}} is logged in",
+                "User has access to the accounts module",
+                "User has the correct permissions - read, assign, and manage for account {{account number}}"
+            ],
+            "Test Postconditions": [
+                "User has assigned access to the accounts module",
+                "User has access to account {{account number}}"
+            ],
+            "Test Variables": [
+                "username",
+                "account number"
+            ],
+            "Test Steps": [
+                { "step": 1, "stepName":"Login", "description": "Login as {{username}}."},
+                { "step": 2, "stepName":"Navigate to Accounts Screen", "description": "Select Accounts > {{account number}} from the sidebar."},
+                { "step": 3, "stepName":"Check Account Details", "description": "Check the account details are correct." },
+                { "step": 4, "stepName":"Assign Account", "description": "Assign the account to the user.", "requireNote": true, "notePrompt": "Please record the transaction number" },
+                { "step": 5, "stepName":"Check Account Assigned", "description": "Check the account is assigned to the user." }
+            ]
+        },
+        {
+            "Test Name": "User can't modify transaction logs",
+            "Test Preconditions": [
+                "User is logged in",
+                "User has access to the logs module",
+                "User does not have the manage-logs, delete-logs, or modify-logs permissions"
+            ],
+            "Test Postconditions": [
+                "User has not modified any logs"
+            ],
+            "Test Steps": [
+                { "step": 1, "stepName":"Login", "description": "Log in as unpivileged user {{unprivileged user}}"},
+                { "step": 2, "stepName": "Navigate to logs screen", "description": "Select Logs from the sidebar."},
+                { "step": 3, 
+                    "stepName":"Locate previous transaction", 
+                    "description": "Enter [[note]] into the 'Account Number' field and press search.", 
+                    "referenceNote": {
+                        "testName": "User can gain access to a connected account",
+                        "stepName": "Assign Account"
+                    }
+                },
+                { "step": 3, "stepName":"Attempt to Edit", "description": "Click the edit item on the single search result" },
+                { "step": 4, "stepName":"Check Edit", "description": "Check the permission denied message is displayed." }
+            ],
+            "Test Variables": [
+                "unprivileged user"
+            ]
+        }
+    ]
+}

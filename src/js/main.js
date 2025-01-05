@@ -29,7 +29,7 @@ class StepElement extends HTMLElement {
         this.shadowRoot.appendChild(template.cloneNode(true));
 
         //Update the content of the shadow DOM copy with this element's info
-        this.shadowRoot.querySelector('h2').textContent = `${this.stepName}`;
+        this.shadowRoot.querySelector('h3').textContent = `${this.stepName}`;
         this.shadowRoot.querySelector('p').textContent = `${this.stepDescription}`;
 
         //Get references to the buttons for later use
@@ -131,6 +131,7 @@ function showTestProcedure(data) {
         <p><strong>Updated:</strong> ${data.Updated}</p>
         <p><strong>Author:</strong> ${data.Author}</p>
         <p><strong>Description:</strong> ${data.Description}</p>
+        <h3>Select Tests to Run</h3>
         <div class="test-selection">
             ${tests.map((test, index) => `
                 <div class="test-checkbox">
@@ -635,7 +636,7 @@ function replaceVariables(text) {
     }
     
     // First replace test variables
-    text = text.replace(/{{(\w+)}}/g, (match, variable) => {
+    text = text.replace(/{{([\w\s]+)}}/g, (match, variable) => {
         if (testVariables && testVariables.size > 0) {
             if (testVariables.has(variable)) {
                 return testVariables.get(variable);
