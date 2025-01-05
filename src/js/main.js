@@ -753,13 +753,14 @@ function saveNotes() {
     localStorage.setItem('wtf-notes', JSON.stringify(notes));
 }
 
-function addNote(title, content, context) {
+function addNote(title, content, context, isAutomatic = false) {
     const note = {
         id: Date.now(),
         title,
         content,
         context: context || 'Home',
         date: new Date().toISOString(),
+        isAutomatic
     };
     notes.unshift(note);
     saveNotes();
@@ -778,7 +779,7 @@ function deleteNote(id) {
 function renderNotes() {
     const container = document.getElementById('notes-list');
     container.innerHTML = notes.map(note => `
-        <div class="note-card" data-id="${note.id}">
+        <div class="note-card ${note.isAutomatic ? 'automatic' : ''}" data-id="${note.id}">
             <h3>${note.title}</h3>
             <div class="context">${note.context} - ${new Date(note.date).toLocaleDateString()}</div>
             <div class="content">${note.content}</div>
@@ -805,10 +806,12 @@ document.getElementById('save-note').addEventListener('click', () => {
 
     if (title && content) {
         let context = 'Manual Note';
+        let isAutomatic = false;
         if (modal.dataset.nextStep) {
             const selectedTest = tests[selectedTests[currentTestIndex]];
             const currentStep = selectedTest["Test Steps"][parseInt(modal.dataset.nextStep)-1];
             context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
+            isAutomatic = true;
 
             //Update step comment with note content
             const existingComment = currentStep.comment || '';
@@ -818,7 +821,7 @@ document.getElementById('save-note').addEventListener('click', () => {
             const currentStep = selectedTest["Test Steps"][currentStepIndex];
             context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
         }
-        addNote(title, content, context);
+        addNote(title, content, context, isAutomatic);
         modal.classList.remove('open');
         document.getElementById('note-title').value = '';
         document.getElementById('note-content').value = '';
