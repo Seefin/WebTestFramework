@@ -258,7 +258,7 @@ function showStep(index) {
             recordStepStatus(stepElement).then(recorded => {
                 if (!recorded) stepElement.status = 'not-run';
                 
-                const currentStep = selectedTest["Test Steps"][index];
+                const currentStep = currentTest["Test Steps"][index];
                 if (currentStep.requireNote) {
                     const modal = document.getElementById('create-note-modal');
                     const title = document.getElementById('note-title');
@@ -574,22 +574,20 @@ function collectVariables(test) {
             return;
         }
 
-        const variableInputs = variables.map(v => `
-            <div class="variable-input-row">
+        const modal = document.getElementById('variables-modal');
+        const form = modal.querySelector('#variable-form');
+        const inputsContainer = modal.querySelector('.variable-inputs');
+
+        inputsContainer.innerHTML = variables.map(v => `
+            <div class="variable-input">
                 <label for="${v}">${v}</label>
                 <input type="text" id="${v}" name="${v}" required>
             </div>
         `).join('');
 
-        content.innerHTML = `
-                <form id="variable-form" class="variable-input-container">
-                    <h2>This test requires the following information:</h2>
-                    ${variableInputs}
-                    <button type="submit" class="button">Save</button>
-                </form>
-            `;
+        modal.classList.add('open');
 
-        document.getElementById('variable-form').addEventListener('submit', (e) => {
+        const handleSubmit = (e) => {
             e.preventDefault();
             testVariables.clear();
             variables.forEach(v => {
@@ -598,8 +596,21 @@ function collectVariables(test) {
                     testVariables.set(v, input.value);
                 }
             });
+            modal.classList.remove('open');
+            form.removeEventListener('submit', handleSubmit);
+            document.getElementById('cancel-variables').removeEventListener('click', handleCancel);
             resolve();
-        });
+        };
+
+        const handleCancel = () => {
+            modal.classList.remove('open');
+            form.removeEventListener('submit', handleSubmit);
+            document.getElementById('cancel-variables').removeEventListener('click', handleCancel);
+            reject(new Error('Variables collection cancelled'));
+        };
+
+        form.addEventListener('submit', handleSubmit);
+        document.getElementById('cancel-variables').addEventListener('click', handleCancel);
     });
 }
 
@@ -704,6 +715,27 @@ function printReport() {
             </div>
             <div class="signature">
                 <p>Tester Signature: ___________________________</p>
+            </div>
+            <div class="report-section">
+                <h2>Test Notes</h2>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Context</th>
+                            <th>Content</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${notes.sort((a, b) => new Date(a.date) - new Date(b.date)).map(note => `
+                            <tr>
+                                <td>${new Date(note.date).toLocaleDateString()}</td>
+                                <td>${note.context}</td>
+                                <td>${note.content}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
         </body>
         </html>

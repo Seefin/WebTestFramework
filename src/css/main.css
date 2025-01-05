@@ -136,25 +136,17 @@ input[type="file"] {
     border-radius: 4px;
     margin-bottom: 20px;
 }
-/* Variable Input Form */
-.variable-input-container {
+/* Variables Modal Styles */
+.variable-inputs {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.variable-input {
     display: flex;
     flex-direction: column;
-    margin-bottom: 20px;
-}
-
-.variable-input-container label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    text-align: end;
-}
-
-.variable-input-container input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
+    gap: 0.5rem;
 }
 
 .variable-input-row {
@@ -170,6 +162,15 @@ input[type="file"] {
 
 .variable-input-row input {
     flex: 2;
+}
+
+.variable-input label {
+    text-transform: lowercase;
+    display: inline-block;
+}
+
+.variable-input label::first-letter {
+    text-transform: uppercase;
 }
 /*Summary Report Print Styles */
 @media print {
@@ -203,7 +204,7 @@ input[type="file"] {
 /* Note Styles */
 .sidebar {
     position: fixed;
-    right: -0;
+    right: 0;
     top: 0;
     bottom: 0;
     width: 300px;
@@ -212,22 +213,25 @@ input[type="file"] {
     padding: 1rem;
     transform: translateX(300px);
     transition: transform 0.3s ease;
-    z-index: 100;
+    z-index: 1000;
 }
 .sidebar.open {
     transform: translateX(0);
 }
 .sidebar-toggle {
     position: absolute;
-    left: -30px;
+    left: -36px;
     top: 50%;
-    background: #007bff;
-    color: white;
+    background: #dee2e6;
+    color: #007bff;
     border: none;
     padding: 0.5rem;
     cursor: pointer;
     writing-mode: vertical-rl;
     text-orientation: mixed;
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+    z-index: -1;
 }
 .note-card {
     background: white;
@@ -261,7 +265,7 @@ input[type="file"] {
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 1000;
+    z-index: 2000;
 }
 .modal.open {
     display: flex;
