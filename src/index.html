@@ -34,8 +34,23 @@
         </div>
     </div>
     <main id="content">
+        <h1>Select Test Procedure</h1>
+        <p>
+            Select a stored test procedure on disk using the &quot;Choose File&quot; button below.
+            The tool will validate the procedure, and then allow you to choose which tests to 
+            perform (defaults to all tests). You will be able to perform each step of a test, 
+            recording if the step passes, fails, or was skipped along with a comment. At the
+            end of all tests (or if you press the &quot;Terminate Run&quot; button), you
+            will be shown basic statistics about the test run. You can print this report
+            (works best in landscape) and sign it, or save the results for later by printing
+            to PDF.
+        </p>
+        <div class="file-input-container">
+            <label for="file-input">Choose File</label>
         <input type="file" id="file-input" />
-        <button class="load-button">Load</button>
+            <div id="filename-display" class="filename-display"></div>
+            <button class="load-button">Validate & Begin</button>
+        </div>
     </main>
     <footer>
         <p>&copy; 2025 Connor Findlay</p>

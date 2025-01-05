@@ -20,8 +20,8 @@ header, footer {
 main {
     flex: 1;
     padding: 2rem;
-    max-width: 90%;
-    min-width: 75%;
+    max-width: 65%;
+    min-width: 50%;
     overflow-x: scroll;
     margin: 0 auto;
     background-color: white;
@@ -59,6 +59,14 @@ main {
 }
 .step-details {
     padding-left: 2rem;
+}
+input,
+textarea {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
 }
 table {
     width: 100%;
@@ -307,4 +315,42 @@ input[type="file"] {
 }
 #new-note {
     width: 100%;
+}
+/* File Input Styling */
+.file-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem auto;
+}
+
+.file-input-container input[type="file"] {
+    display: none;
+}
+
+.file-input-container label {
+    background-color: #007bff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.file-input-container label:hover {
+    background-color: #0056b3;
+}
+
+.file-input-container .load-button {
+    margin-top: 0;
+}
+
+.filename-display {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    min-height: 1.2em;
+    text-align: center;
 }

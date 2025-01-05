@@ -74,6 +74,14 @@ let currentTestIndex = 0;
 let currentStepIndex = 0;
 let testProcedure = {};
 
+//Display the file selected by the user
+
+// Add file input change listener
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const filenameDisplay = document.getElementById('filename-display');
+    filenameDisplay.textContent = this.files[0] ? this.files[0].name : '';
+});
+
 //Process the file selected by the user
 loadButton.addEventListener('click', () => {
     const file = fileInput.files[0];
@@ -97,22 +105,22 @@ let selectedTests = [];
 *
 * @param {Object} data - The data object containing test procedure details.
 * @param {string} data["Test Procedure"] - The title of the test procedure.
-    * @param {string} data.Updated - The date when the test procedure was last updated.
-    * @param {string} data.Author - The author of the test procedure.
-    * @param {string} data.Description - A description of the test procedure.
-    *
-    * @example
-    * const data = {
-    *   "Test Procedure": "Procedure 1",
-    *   Updated: "2023-10-01",
-    *   Author: "John Doe",
-    *   Description: "This is a test procedure description."
-    *   "Tests" : [...]
-    * };
-    * showTestProcedure(data);
-    */
-    function showTestProcedure(data) {
-        content.innerHTML = `
+* @param {string} data.Updated - The date when the test procedure was last updated.
+* @param {string} data.Author - The author of the test procedure.
+* @param {string} data.Description - A description of the test procedure.
+*
+* @example
+* const data = {
+*   "Test Procedure": "Procedure 1",
+*   Updated: "2023-10-01",
+*   Author: "John Doe",
+*   Description: "This is a test procedure description."
+*   "Tests" : [...]
+* };
+* showTestProcedure(data);
+*/
+function showTestProcedure(data) {
+    content.innerHTML = `
         <h2>Test Procedure</h2>
         <p><strong>Updated:</strong> ${data.Updated}</p>
         <p><strong>Author:</strong> ${data.Author}</p>
@@ -127,436 +135,436 @@ let selectedTests = [];
         </div>
         <button id="continue-button" class="button">Continue</button>
     `;
-        
-        const checkboxes = document.querySelectorAll('.test-checkbox input');
-        const beginButton = document.getElementById('continue-button');
-        
-        // Initialize selectedTests
-        selectedTests = tests.map((_, index) => index);
-        
-        // Handle checkbox changes
-        checkboxes.forEach((checkbox, index) => {
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    selectedTests.push(index);
-                } else {
-                    selectedTests = selectedTests.filter(i => i !== index);
-                }
-                beginButton.disabled = selectedTests.length === 0;
-            });
-        });
-        
-        beginButton.addEventListener('click', () => {
-            if (selectedTests.length === 0) {
-                alert('Please select at least one test to run');
-                return;
-            }
-            currentTestIndex = 0;
-            currentStepIndex = 0;
-            showTest(currentTestIndex);
-        });
-    }
     
-    /**
-    * Displays the test details and handles the test execution flow.
-    *
-    * @param {number} index - The index of the test to display.
-    * @returns {void}
-    *
-    * @description
-    * This function displays the details of a test, including its preconditions and postconditions.
-    * It collects necessary variables, replaces placeholders in the conditions, and updates the content
-    * of the page with the test details. It also sets up an event listener on the "Begin" button to start
-    * the test steps.
-    *
-    * @example
-    * // Assuming `tests` is an array of test objects and `content` is a DOM element
-    * showTest(0);
-    */
-    function showTest(index) {
-        if (typeof index !== 'number' || index < 0 || index >= selectedTests.length) {
-            console.error('Invalid index:', index);
-            content.innerHTML = `<p>Invalid test index. Please select a valid test.</p>`;
-            return;
-        }
-        const test = tests[selectedTests[index]];
-        
-        //Collect and handle variables
-        collectVariables(test).then(() => {
-            const preconditions = test["Test Preconditions"].map(replaceVariables);
-            const postconditions = test["Test Postconditions"].map(replaceVariables);
-            
-            content.innerHTML = `
-        <h2>${test["Test Name"]}</h2>
-        <p><strong>Preconditions:</strong></p>
-        <ul>${preconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
-        <p><strong>Postconditions:</strong></p>
-        <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
-        <button id="begin-button">Begin</button>
-        `;
-            
-            document.getElementById('begin-button').addEventListener('click', () => {
-                showStep(0);
-            });
-        })
-        .catch((error) => {
-            console.error('Error collecting variables:', error);
-            content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
-        });
-    }
+    const checkboxes = document.querySelectorAll('.test-checkbox input');
+    const beginButton = document.getElementById('continue-button');
     
-    /**
-    * Displays the test details for the given index.
-    * 
-    * This function retrieves the test at the specified index from the `tests` array,
-    * collects and handles variables, and then displays the test name, preconditions,
-    * and postconditions in the `content` element. It also sets up an event listener
-    * on the "Begin" button to start the test steps.
-    * 
-    * @param {number} index - The index of the test to display.
-    * @returns {void}
-    * 
-    * @example
-    * showTest(0);
-    */
-    function showStep(index) {
-        const selectedTest = tests[selectedTests[currentTestIndex]];
-        content.innerHTML = '';
-        if (!selectedTest){
-            showStatistics();
-        } else if (index < selectedTest["Test Steps"].length && index >= 0) {
-            // Add the step name
-            const testHeader = document.createElement('h2');
-            testHeader.textContent = selectedTest["Test Name"];
-            content.appendChild(testHeader);
-            
-            //Create and configure step element
-            const stepElement = document.createElement('step-element');
-            const stepData = { ...selectedTest["Test Steps"][index] };
-            stepData.description = replaceVariables(stepData.description);
-            stepElement.stepData = stepData;
-            
-            //Add the new element to the page
-            content.appendChild(stepElement);
-            
-            //Add event listeners to the buttons
-            stepElement.nextButton.addEventListener('click', () => {
-                recordStepStatus(stepElement);
-                showStep(index + 1);
-            });
-            stepElement.terminateButton.addEventListener('click', () => {
-                recordStepStatus(stepElement);
-                showStatistics();
-            });
-        } else {
-            currentTestIndex++;
-            currentStepIndex = 0;
-            if (currentTestIndex < selectedTests.length) {
-                showTest(currentTestIndex);
+    // Initialize selectedTests
+    selectedTests = tests.map((_, index) => index);
+    
+    // Handle checkbox changes
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                selectedTests.push(index);
             } else {
-                showStatistics();
+                selectedTests = selectedTests.filter(i => i !== index);
             }
-        }
-    }
-    
-    /**
-    * Updates the status and comment of the current test step and increments the step index.
-    *
-    * @param {Object} stepElement - The element containing the status and comment of the test step.
-    * @param {string} stepElement.status - The status of the test step.
-    * @param {string} stepElement.comment - The comment for the test step.
-    * 
-    * @modifies {number} currentStepIndex - Increments the global currentStepIndex variable.
-    *
-    * @throws {Error} If the current test or step index is out of bounds.
-    */
-    function recordStepStatus(stepElement) {
-        const selectedTest = tests[selectedTests[currentTestIndex]];
-        // Check if the current step index is within the bounds of the test steps array
-        if (currentStepIndex < selectedTest["Test Steps"].length) {
-            // Get the status and comment from the step element
-            const status = stepElement.status;
-            const comment = stepElement.comment;
-            
-            // Update the status and comment of the current test step
-            selectedTest["Test Steps"][currentStepIndex].status = status;
-            selectedTest["Test Steps"][currentStepIndex].comment = comment;
-            
-            // Increment the current step index to move to the next step
-            currentStepIndex++;
-        } else {
-            // Log an error if the step index is out of bounds
-            console.error('Step index out of bounds');
-        }
-    }
-    
-    /**
-    * Displays the test run statistics and details in the content area.
-    * 
-    * This function clears the current content and appends the statistics summary and details.
-    * It calculates the pass rate of the tests and displays a summary with an option to toggle
-    * the visibility of detailed test steps.
-    * 
-    * @remarks
-    * - The function assumes the existence of global variables `content`, `statistics`, `statsBody`, and `tests`.
-    * - The `tests` variable should be an array of test objects, each containing a "Test Name" and "Test Steps".
-    * - Each "Test Step" should have a `status` and optionally a `comment`.
-    * 
-    * @example
-    * // Example structure of the `tests` array:
-    * const tests = [
-    *   {
-    *     "Test Name": "Test 1",
-    *     "Test Steps": [
-    *       { stepName: "Step 1", status: "Pass", comment: "All good" },
-    *       { stepName: "Step 2", status: "Fail", comment: "Something went wrong" }
-    *     ]
-    *   },
-    *   {
-    *     "Test Name": "Test 2",
-    *     "Test Steps": [
-    *       { stepName: "Step 1", status: "Pass" },
-    *       { stepName: "Step 2", status: "Pass" }
-    *     ]
-    *   }
-    * ];
-    */
-    function showStatistics() {
-        //Validate state and data
-        if (!content || !statistics || !statsBody || !tests || tests.length === 0) {
-            console.error('Missing required elements or data.');
-            return;
-        }
-        
-        //Prepare to display statistics
-        content.innerHTML = '';
-        content.appendChild(statistics);
-        statistics.classList.remove('hidden');
-        
-        //Clear existing table body
-        let table_body = statsBody.querySelector('tbody');
-        if (!table_body) {
-            table_body = document.createElement('tbody');
-            statsBody.appendChild(table_body);
-        }
-        table_body.innerHTML = '';
-        
-        //Count Steps
-        let passCount = 0;
-        let totalSteps = 0;
-
-        selectedTests.forEach(testIndex => {
-            const test = tests[testIndex];
-            if (!test["Test Steps"] || !Array.isArray(test["Test Steps"]) || test["Test Steps"].length === 0) {
-                console.error(`Test steps are missing or not an array for test: ${test["Test Name"]}`);
-                return;
-            }
-            test["Test Steps"].forEach(step => {
-                if (step.status === 'Pass') {
-                    passCount++;
-                }
-            });
-            totalSteps += test["Test Steps"].length;
+            beginButton.disabled = selectedTests.length === 0;
         });
-        
-        if (totalSteps === 0) {
-            //No steps to display
-            console.error('No test steps found.');
+    });
+    
+    beginButton.addEventListener('click', () => {
+        if (selectedTests.length === 0) {
+            alert('Please select at least one test to run');
             return;
         }
+        currentTestIndex = 0;
+        currentStepIndex = 0;
+        showTest(currentTestIndex);
+    });
+}
+
+/**
+* Displays the test details and handles the test execution flow.
+*
+* @param {number} index - The index of the test to display.
+* @returns {void}
+*
+* @description
+* This function displays the details of a test, including its preconditions and postconditions.
+* It collects necessary variables, replaces placeholders in the conditions, and updates the content
+* of the page with the test details. It also sets up an event listener on the "Begin" button to start
+* the test steps.
+*
+* @example
+* // Assuming `tests` is an array of test objects and `content` is a DOM element
+* showTest(0);
+*/
+function showTest(index) {
+    if (typeof index !== 'number' || index < 0 || index >= selectedTests.length) {
+        console.error('Invalid index:', index);
+        content.innerHTML = `<p>Invalid test index. Please select a valid test.</p>`;
+        return;
+    }
+    const test = tests[selectedTests[index]];
+    
+    //Collect and handle variables
+    collectVariables(test).then(() => {
+        const preconditions = test["Test Preconditions"].map(replaceVariables);
+        const postconditions = test["Test Postconditions"].map(replaceVariables);
         
-        //Calculate and display pass rate
-        const passRate = (passCount / totalSteps) * 100;
-        const summary = document.createElement('div');
-        summary.innerHTML = `
+        content.innerHTML = `
+    <h2>${test["Test Name"]}</h2>
+    <p><strong>Preconditions:</strong></p>
+    <ul>${preconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
+    <p><strong>Postconditions:</strong></p>
+    <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
+    <button id="begin-button">Begin</button>
+    `;
+        
+        document.getElementById('begin-button').addEventListener('click', () => {
+            showStep(0);
+        });
+    })
+    .catch((error) => {
+        console.error('Error collecting variables:', error);
+        content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
+    });
+}
+
+/**
+* Displays the test details for the given index.
+* 
+* This function retrieves the test at the specified index from the `tests` array,
+* collects and handles variables, and then displays the test name, preconditions,
+* and postconditions in the `content` element. It also sets up an event listener
+* on the "Begin" button to start the test steps.
+* 
+* @param {number} index - The index of the test to display.
+* @returns {void}
+* 
+* @example
+* showTest(0);
+*/
+function showStep(index) {
+    const selectedTest = tests[selectedTests[currentTestIndex]];
+    content.innerHTML = '';
+    if (!selectedTest){
+        showStatistics();
+    } else if (index < selectedTest["Test Steps"].length && index >= 0) {
+        // Add the step name
+        const testHeader = document.createElement('h2');
+        testHeader.textContent = selectedTest["Test Name"];
+        content.appendChild(testHeader);
+        
+        //Create and configure step element
+        const stepElement = document.createElement('step-element');
+        const stepData = { ...selectedTest["Test Steps"][index] };
+        stepData.description = replaceVariables(stepData.description);
+        stepElement.stepData = stepData;
+        
+        //Add the new element to the page
+        content.appendChild(stepElement);
+        
+        //Add event listeners to the buttons
+        stepElement.nextButton.addEventListener('click', () => {
+            recordStepStatus(stepElement);
+            showStep(index + 1);
+        });
+        stepElement.terminateButton.addEventListener('click', () => {
+            recordStepStatus(stepElement);
+            showStatistics();
+        });
+    } else {
+        currentTestIndex++;
+        currentStepIndex = 0;
+        if (currentTestIndex < selectedTests.length) {
+            showTest(currentTestIndex);
+        } else {
+            showStatistics();
+        }
+    }
+}
+
+/**
+* Updates the status and comment of the current test step and increments the step index.
+*
+* @param {Object} stepElement - The element containing the status and comment of the test step.
+* @param {string} stepElement.status - The status of the test step.
+* @param {string} stepElement.comment - The comment for the test step.
+* 
+* @modifies {number} currentStepIndex - Increments the global currentStepIndex variable.
+*
+* @throws {Error} If the current test or step index is out of bounds.
+*/
+function recordStepStatus(stepElement) {
+    const selectedTest = tests[selectedTests[currentTestIndex]];
+    // Check if the current step index is within the bounds of the test steps array
+    if (currentStepIndex < selectedTest["Test Steps"].length) {
+        // Get the status and comment from the step element
+        const status = stepElement.status;
+        const comment = stepElement.comment;
+        
+        // Update the status and comment of the current test step
+        selectedTest["Test Steps"][currentStepIndex].status = status;
+        selectedTest["Test Steps"][currentStepIndex].comment = comment;
+        
+        // Increment the current step index to move to the next step
+        currentStepIndex++;
+    } else {
+        // Log an error if the step index is out of bounds
+        console.error('Step index out of bounds');
+    }
+}
+
+/**
+* Displays the test run statistics and details in the content area.
+* 
+* This function clears the current content and appends the statistics summary and details.
+* It calculates the pass rate of the tests and displays a summary with an option to toggle
+* the visibility of detailed test steps.
+* 
+* @remarks
+* - The function assumes the existence of global variables `content`, `statistics`, `statsBody`, and `tests`.
+* - The `tests` variable should be an array of test objects, each containing a "Test Name" and "Test Steps".
+* - Each "Test Step" should have a `status` and optionally a `comment`.
+* 
+* @example
+* // Example structure of the `tests` array:
+* const tests = [
+*   {
+*     "Test Name": "Test 1",
+*     "Test Steps": [
+*       { stepName: "Step 1", status: "Pass", comment: "All good" },
+*       { stepName: "Step 2", status: "Fail", comment: "Something went wrong" }
+*     ]
+*   },
+*   {
+*     "Test Name": "Test 2",
+*     "Test Steps": [
+*       { stepName: "Step 1", status: "Pass" },
+*       { stepName: "Step 2", status: "Pass" }
+*     ]
+*   }
+* ];
+*/
+function showStatistics() {
+    //Validate state and data
+    if (!content || !statistics || !statsBody || !tests || tests.length === 0) {
+        console.error('Missing required elements or data.');
+        return;
+    }
+    
+    //Prepare to display statistics
+    content.innerHTML = '';
+    content.appendChild(statistics);
+    statistics.classList.remove('hidden');
+    
+    //Clear existing table body
+    let table_body = statsBody.querySelector('tbody');
+    if (!table_body) {
+        table_body = document.createElement('tbody');
+        statsBody.appendChild(table_body);
+    }
+    table_body.innerHTML = '';
+    
+    //Count Steps
+    let passCount = 0;
+    let totalSteps = 0;
+    
+    selectedTests.forEach(testIndex => {
+        const test = tests[testIndex];
+        if (!test["Test Steps"] || !Array.isArray(test["Test Steps"]) || test["Test Steps"].length === 0) {
+            console.error(`Test steps are missing or not an array for test: ${test["Test Name"]}`);
+            return;
+        }
+        test["Test Steps"].forEach(step => {
+            if (step.status === 'Pass') {
+                passCount++;
+            }
+        });
+        totalSteps += test["Test Steps"].length;
+    });
+    
+    if (totalSteps === 0) {
+        //No steps to display
+        console.error('No test steps found.');
+        return;
+    }
+    
+    //Calculate and display pass rate
+    const passRate = (passCount / totalSteps) * 100;
+    const summary = document.createElement('div');
+    summary.innerHTML = `
         <h2>Test Summary</h2>
-           ${selectedTests.length < tests.length ? 
+        ${selectedTests.length < tests.length ? 
         `<p class="partial-run-notice">Completed ${selectedTests.length} of ${tests.length} total tests</p>` 
         : ''}
         <p>Pass Rate: ${passRate.toFixed(2)}%</p>
         <button id="toggle-details">Show Details</button>
         <button id="print-report-button" class="button">Print Report</button>
     `;
-        content.appendChild(summary);
-        
-        //Prepare test details nodes
-        const details = document.createElement('div');
-        details.id = 'details';
-        details.classList.add('hidden');
-        
-        //Create and append table header
-        const testHeader = document.createElement('tr');
-        testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
-        statsBody.appendChild(testHeader);
-        
-        //Create and append table body
-        selectedTests.forEach((testIndex) => {
-            const test = tests[testIndex];
-            const testRow = document.createElement('tr');
-            const testStatus = test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined) ? 'not-run' : 'Pass';
-            const overallStatus = testStatus === 'Pass' ? 'Pass' : testStatus === 'Fail' ? 'Fail' : 'Not Run';
-            testRow.classList.add(testStatus === 'Pass' ? 'pass' : testStatus === 'not-run' ? 'not-run' : 'fail');
-            testRow.classList.add('test-details');
-            testRow.innerHTML = `
-            <td>${test["Test Name"]}</td>
-            <td>${overallStatus}</td>
-            <td><button class="toggle-steps">Show Steps</button></td>
+    content.appendChild(summary);
+    
+    //Prepare test details nodes
+    const details = document.createElement('div');
+    details.id = 'details';
+    details.classList.add('hidden');
+    
+    //Create and append table header
+    const testHeader = document.createElement('tr');
+    testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
+    statsBody.appendChild(testHeader);
+    
+    //Create and append table body
+    selectedTests.forEach((testIndex) => {
+        const test = tests[testIndex];
+        const testRow = document.createElement('tr');
+        const testStatus = test["Test Steps"].some(step => step.status === 'Fail') ? 'Fail' : test["Test Steps"].some(step => step.status === undefined) ? 'not-run' : 'Pass';
+        const overallStatus = testStatus === 'Pass' ? 'Pass' : testStatus === 'Fail' ? 'Fail' : 'Not Run';
+        testRow.classList.add(testStatus === 'Pass' ? 'pass' : testStatus === 'not-run' ? 'not-run' : 'fail');
+        testRow.classList.add('test-details');
+        testRow.innerHTML = `
+        <td>${test["Test Name"]}</td>
+        <td>${overallStatus}</td>
+        <td><button class="toggle-steps">Show Steps</button></td>
+    `;
+        statsBody.appendChild(testRow);
+        //Create and append test steps
+        const stepContainer = document.createElement('div');
+        stepContainer.classList.add('step-container');
+        const stepTable = document.createElement('table');
+        const testHeaderRow = document.createElement('tr');
+        testHeaderRow.innerHTML = `
+            <th>Step</th>
+            <th>Status</th>
+            <th>Comment</th>
         `;
-            statsBody.appendChild(testRow);
-            //Create and append test steps
-            const stepContainer = document.createElement('div');
-            stepContainer.classList.add('step-container');
-            const stepTable = document.createElement('table');
-            const testHeaderRow = document.createElement('tr');
-            testHeaderRow.innerHTML = `
-                <th>Step</th>
-                <th>Status</th>
-                <th>Comment</th>
+        Array.from(testHeaderRow.children).forEach((child) => { child.classList.add('test-step-header'); });
+        stepTable.appendChild(testHeaderRow);
+        //Add steps to the table
+        test["Test Steps"].forEach((step) => {
+            const stepStatus = step.hasOwnProperty('status') ? step.status : 'Not Applicable';
+            const stepComment = step.hasOwnProperty('comment') ? step.comment : 'Not Applicable';
+            const stepRow = document.createElement('tr');
+            stepRow.classList.add('step-details');
+            stepRow.classList.add(stepStatus === 'Fail' ? 'fail' : stepStatus === 'Pass' ? 'pass' : 'not-run');
+            stepRow.innerHTML = `
+                <td>${step.stepName}</td>
+                <td>${stepStatus}</td>
+                <td>${stepComment}</td>
             `;
-            Array.from(testHeaderRow.children).forEach((child) => { child.classList.add('test-step-header'); });
-            stepTable.appendChild(testHeaderRow);
-            //Add steps to the table
-            test["Test Steps"].forEach((step) => {
-                const stepStatus = step.hasOwnProperty('status') ? step.status : 'Not Applicable';
-                const stepComment = step.hasOwnProperty('comment') ? step.comment : 'Not Applicable';
-                const stepRow = document.createElement('tr');
-                stepRow.classList.add('step-details');
-                stepRow.classList.add(stepStatus === 'Fail' ? 'fail' : stepStatus === 'Pass' ? 'pass' : 'not-run');
-                stepRow.innerHTML = `
-                    <td>${step.stepName}</td>
-                    <td>${stepStatus}</td>
-                    <td>${stepComment}</td>
-                `;
-                stepTable.appendChild(stepRow);
-            });
-            
-            //Add the step table to the step container
-            stepContainer.appendChild(stepTable);
-            const stepTableRow = document.createElement('tr');
-            stepTableRow.appendChild(document.createElement('td'));
-            stepTableRow.querySelector('td').colSpan = 3;
-            stepTableRow.querySelector('td').appendChild(stepContainer);
-            stepTableRow.classList.add('hidden')
-            statsBody.appendChild(stepTableRow);
-            
-            //Add event listener to toggle step visibility
-            testRow.querySelector('.toggle-steps').addEventListener('click', () => {
-                stepTableRow.classList.toggle('hidden');
-                const button = testRow.querySelector('.toggle-steps');
-                button.textContent = stepTableRow.classList.contains('hidden') ? 'Show Steps' : 'Hide Steps';
-            });
+            stepTable.appendChild(stepRow);
         });
         
-        //Add the details to the content area
-        details.appendChild(statsBody);
-        content.appendChild(details);
+        //Add the step table to the step container
+        stepContainer.appendChild(stepTable);
+        const stepTableRow = document.createElement('tr');
+        stepTableRow.appendChild(document.createElement('td'));
+        stepTableRow.querySelector('td').colSpan = 3;
+        stepTableRow.querySelector('td').appendChild(stepContainer);
+        stepTableRow.classList.add('hidden')
+        statsBody.appendChild(stepTableRow);
         
-        //Add event listener to toggle details visibility
-        document.getElementById('toggle-details').addEventListener('click', () => {
-            details.classList.toggle('hidden');
-            const button = document.getElementById('toggle-details');
-            button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
+        //Add event listener to toggle step visibility
+        testRow.querySelector('.toggle-steps').addEventListener('click', () => {
+            stepTableRow.classList.toggle('hidden');
+            const button = testRow.querySelector('.toggle-steps');
+            button.textContent = stepTableRow.classList.contains('hidden') ? 'Show Steps' : 'Hide Steps';
         });
+    });
+    
+    //Add the details to the content area
+    details.appendChild(statsBody);
+    content.appendChild(details);
+    
+    //Add event listener to toggle details visibility
+    document.getElementById('toggle-details').addEventListener('click', () => {
+        details.classList.toggle('hidden');
+        const button = document.getElementById('toggle-details');
+        button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
+    });
+    
+    //Add event listener to print report button
+    document.getElementById('print-report-button').addEventListener('click', printReport);
+}
+
+//Handle variables in tests
+const testVariables = new Map();
+
+/**
+* Collects variables required for a test by dynamically generating a form.
+* 
+* @param {Object} test - The test object containing the variables.
+* @param {Array<string>} test["Test Variables"] - An array of variable names required for the test.
+* @returns {Promise<void>} A promise that resolves when the form is submitted and variables are collected.
+* 
+* @example
+* const test = {
+*   "Test Variables": ["variable1", "variable2"]
+* };
+* collectVariables(test).then(() => {
+*   console.log("Variables collected");
+* });
+*/
+function collectVariables(test) {
+    return new Promise((resolve, reject) => {
+        const variables = test["Test Variables"];
+        if (!variables || variables.length === 0) {
+            resolve();
+            return;
+        }
         
-        //Add event listener to print report button
-        document.getElementById('print-report-button').addEventListener('click', printReport);
-    }
-    
-    //Handle variables in tests
-    const testVariables = new Map();
-    
-    /**
-    * Collects variables required for a test by dynamically generating a form.
-    * 
-    * @param {Object} test - The test object containing the variables.
-    * @param {Array<string>} test["Test Variables"] - An array of variable names required for the test.
-        * @returns {Promise<void>} A promise that resolves when the form is submitted and variables are collected.
-        * 
-        * @example
-        * const test = {
-        *   "Test Variables": ["variable1", "variable2"]
-        * };
-        * collectVariables(test).then(() => {
-            *   console.log("Variables collected");
-        * });
-        */
-        function collectVariables(test) {
-            return new Promise((resolve, reject) => {
-                const variables = test["Test Variables"];
-                if (!variables || variables.length === 0) {
-                    resolve();
-                    return;
-                }
-                
-                const variableInputs = variables.map(v => `
+        const variableInputs = variables.map(v => `
             <div class="variable-input-row">
                 <label for="${v}">${v}</label>
                 <input type="text" id="${v}" name="${v}" required>
             </div>
         `).join('');
-                    
-                    content.innerHTML = `
-            <form id="variable-form" class="variable-input-container">
-                <h2>This test requires the following information:</h2>
-                ${variableInputs}
-                <button type="submit" class="button">Save</button>
-            </form>
-        `;
-                    
-                    document.getElementById('variable-form').addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        testVariables.clear();
-                        variables.forEach(v => {
-                            const input = document.getElementById(v);
-                            if (input) {
-                                testVariables.set(v, input.value);
-                            }
-                        });
-                        resolve();
-                    });
-                });
-            }
             
-            /**
-            * Replaces variables in the given text with their corresponding values from the `testVariables` map.
-            * Variables in the text should be in the format {{variableName}}.
-            *
-            * @param {string} text - The input text containing variables to be replaced.
-            * @returns {string} - The text with variables replaced by their corresponding values from the `testVariables` map.
-            *                     If a variable does not have a corresponding value, it remains unchanged in the text.
-            *                     If the input text is null or undefined, it returns the input as is.
-            *
-            * @example
-            * const testVariables = new Map([['name', 'John'], ['age', '30']]);
-            * const result = replaceVariables('Hello, {{name}}! You are {{age}} years old.');
-            * console.log(result); // Output: 'Hello, John! You are 30 years old.'
-            */
-            function replaceVariables(text) {
-                if (!text) {
-                    //Input is null or undefined
-                    return text;
+            content.innerHTML = `
+                <form id="variable-form" class="variable-input-container">
+                    <h2>This test requires the following information:</h2>
+                    ${variableInputs}
+                    <button type="submit" class="button">Save</button>
+                </form>
+            `;
+            
+        document.getElementById('variable-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            testVariables.clear();
+            variables.forEach(v => {
+                const input = document.getElementById(v);
+                if (input) {
+                    testVariables.set(v, input.value);
                 }
-                return text.replace(/{{(\w+)}}/g, (match, variable) => {
-                    if (testVariables && testVariables.size > 0) {
-                        if (testVariables.has(variable)) {
-                            return testVariables.get(variable);
-                        }
-                    }
-                    return match;
-                });
+            });
+            resolve();
+        });
+    });
+}
+    
+/**
+* Replaces variables in the given text with their corresponding values from the `testVariables` map.
+* Variables in the text should be in the format {{variableName}}.
+*
+* @param {string} text - The input text containing variables to be replaced.
+* @returns {string} - The text with variables replaced by their corresponding values from the `testVariables` map.
+*                     If a variable does not have a corresponding value, it remains unchanged in the text.
+*                     If the input text is null or undefined, it returns the input as is.
+*
+* @example
+* const testVariables = new Map([['name', 'John'], ['age', '30']]);
+* const result = replaceVariables('Hello, {{name}}! You are {{age}} years old.');
+* console.log(result); // Output: 'Hello, John! You are 30 years old.'
+*/
+function replaceVariables(text) {
+    if (!text) {
+        //Input is null or undefined
+        return text;
+    }
+    return text.replace(/{{(\w+)}}/g, (match, variable) => {
+        if (testVariables && testVariables.size > 0) {
+            if (testVariables.has(variable)) {
+                return testVariables.get(variable);
             }
-            
-            /**
-            * Generates a printable report of the test session.
-            *
-            * This function creates a new window with the test session details formatted for printing.
-            * The report includes the test procedure details, test steps, their status, and a space for the tester to sign.
-            *
-            * @returns {void}
-            */
-            function printReport() {
-                const reportWindow = window.open('', '_blank');
-                const reportContent = `
+        }
+        return match;
+    });
+}
+    
+/**
+* Generates a printable report of the test session.
+*
+* This function creates a new window with the test session details formatted for printing.
+* The report includes the test procedure details, test steps, their status, and a space for the tester to sign.
+*
+* @returns {void}
+*/
+function printReport() {
+    const reportWindow = window.open('', '_blank');
+    const reportContent = `
         <html>
         <head>
             <title>Test Report</title>
@@ -586,16 +594,16 @@ let selectedTests = [];
                     </thead>
                     <tbody>
                         ${selectedTests.map(testIndex => {
-                const test = tests[testIndex];
-                return test["Test Steps"].map((step, stepIndex) => `
-                                <tr>
-                                    <td>${test["Test Name"]}</td>
-                                    <td>${step.stepName}</td>
-                                    <td>${step.status || 'N/A'}</td>
-                                    <td>${step.comment || ''}</td>
-                                </tr>
-                            `).join('');
-            }).join('')}
+                        const test = tests[testIndex];
+                        return test["Test Steps"].map((step, stepIndex) => `
+                                            <tr>
+                                                <td>${test["Test Name"]}</td>
+                                                <td>${step.stepName}</td>
+                                                <td>${step.status || 'N/A'}</td>
+                                                <td>${step.comment || ''}</td>
+                                            </tr>
+                                        `).join('');
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -605,11 +613,11 @@ let selectedTests = [];
         </body>
         </html>
     `;
-            reportWindow.document.write(reportContent);
-            reportWindow.document.close();
-            reportWindow.print();
-        }
-        
+    reportWindow.document.write(reportContent);
+    reportWindow.document.close();
+    reportWindow.print();
+}
+
 //Note Management
 const notes = JSON.parse(localStorage.getItem('wtf-notes') || '[]');
 
