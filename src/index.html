@@ -10,6 +10,29 @@
     <header>
         <h1>Web Test Framework</h1>
     </header>
+    <div class="sidebar">
+        <button class="sidebar-toggle">Notes</button>
+        <div class="notes-container">
+            <button id="new-note" class="button">New Note</button>
+            <div id="notes-list"></div>
+        </div>
+    </div>
+    <div id="create-note-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add Note</h2>
+            <input type="text" id="note-title" placeholder="Title">
+            <textarea id="note-content" placeholder="Note content"></textarea>
+            <div class="button-group">
+                <button id="save-note" class="button">Save</button>
+                <button id="cancel-note" class="button">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="view-note-modal" class="modal">
+        <div class="modal-content">
+            <!-- Content will be dynamically inserted -->
+        </div>
+    </div>
     <main id="content">
         <input type="file" id="file-input" />
         <button class="load-button">Load</button>

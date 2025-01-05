@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 body {
     font-family: sans-serif;
     margin: 0;
@@ -103,6 +106,7 @@ input[type="file"] {
 .step-container {
     width: 100%;
 }
+/* Test Selection */
 .test-selection {
     margin: 20px 0;
     padding: 10px;
@@ -121,6 +125,7 @@ input[type="file"] {
     border-radius: 4px;
     margin-bottom: 20px;
 }
+/* Variable Input Form */
 .variable-input-container {
     display: flex;
     flex-direction: column;
@@ -155,6 +160,7 @@ input[type="file"] {
 .variable-input-row input {
     flex: 2;
 }
+/*Summary Report Print Styles */
 @media print {
     body {
         font-family: Arial, sans-serif;
@@ -182,4 +188,123 @@ input[type="file"] {
     .signature {
         margin-top: 40px;
     }
+}
+/* Note Styles */
+.sidebar {
+    position: fixed;
+    right: -0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    background: #f8f9fa;
+    border-left: 1px solid #dee2e6;
+    padding: 1rem;
+    transform: translateX(300px);
+    transition: transform 0.3s ease;
+    z-index: 100;
+}
+.sidebar.open {
+    transform: translateX(0);
+}
+.sidebar-toggle {
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+.note-card {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 1rem 0;
+    padding: 0.75rem;
+}
+.note-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #007bff;
+}
+.note-card .context {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+.note-card .content {
+    font-size: 0.9rem;
+    max-height: 3em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre-line;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+.modal.open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    max-height: 575px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal-content h2 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+}
+
+.modal-content .content {
+    min-height: 150px;
+    padding: 0.75rem;
+    border: 1px sold #dee2e6;
+    border-radius: 4px;
+    font-size: 1rem;
+    background: #f8f9fa;
+    overflow-y: scroll;
+    white-space: pre-line;
+}
+
+.modal-content textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.modal-content .button-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+.modal-content .button {
+    margin-top: 0;
+}
+#new-note {
+    width: 100%;
 }

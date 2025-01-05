@@ -610,3 +610,94 @@ let selectedTests = [];
             reportWindow.print();
         }
         
+//Note Management
+const notes = JSON.parse(localStorage.getItem('wtf-notes') || '[]');
+
+function saveNotes() {
+    localStorage.setItem('wtf-notes', JSON.stringify(notes));   
+}
+
+function addNote(title, content) {
+    const note = {
+        id: Date.now(),
+        title,
+        content,
+        context: window.location.hash || 'Home',
+        date: new Date().toISOString(),
+    };
+    notes.unshift(note);
+    saveNotes();
+    renderNotes();
+}
+
+function deleteNote(id){
+    const index = notes.findIndex(note => note.id == id);
+    if (index >= -1) {
+        notes.splice(index, 1);
+        saveNotes();
+        renderNotes();
+    }
+}
+
+function renderNotes(){
+    const container = document.getElementById('notes-list');
+    container.innerHTML = notes.map(note => `
+        <div class="note-card" data-id="${note.id}">
+            <h3>${note.title}</h3>
+            <div class="context">${note.context} - ${new Date(note.date).toLocaleDateString()}</div>
+            <div class="content">${note.content}</div>
+            <button class="delete-note">Delete</button>
+            <button class="view-note">View</button>
+        </div>
+    `).join('');
+}
+
+//Initalise Sidebar
+document.querySelector('.sidebar-toggle').addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.toggle('open');
+});
+
+document.getElementById('new-note').addEventListener('click', () => {
+    const modal = document.getElementById('create-note-modal');
+    modal.classList.add('open');
+});
+
+document.getElementById('save-note').addEventListener('click', () => {
+    const title = document.getElementById('note-title').value;
+    const content = document.getElementById('note-content').value;
+    if (title && content){
+        addNote(title, content);
+        document.getElementById('create-note-modal').classList.remove('open');
+        document.getElementById('note-title').value = '';
+        document.getElementById('note-content').value = '';
+    }
+});
+
+document.getElementById('cancel-note').addEventListener('click', () => {
+    document.getElementById('create-note-modal').classList.remove('open');
+});
+
+document.getElementById('notes-list').addEventListener('click', (e) => {
+    const noteCard = e.target.closest('.note-card');
+    if (!noteCard) return;
+
+    if (e.target.classList.contains('delete-note')) {
+        deleteNote(parseInt(noteCard.dataset.id));
+    } else if (e.target.classList.contains('view-note')) {
+        const note = notes.find(note => note.id === parseInt(noteCard.dataset.id));
+        if (note) {
+            const modal = document.getElementById('view-note-modal');
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h2>${note.title}</h2>
+                    <div class="context">${note.context} - ${new Date(note.date).toLocaleDateString()}</div>
+                    <div class="content">${note.content}</div>
+                    <button onclick="document.getElementById('view-note-modal').classList.remove('open')">Close</button>
+                </div>
+            `;
+            modal.classList.add('open');
+        }
+    }
+});
+
+renderNotes();
