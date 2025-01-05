@@ -281,6 +281,8 @@ function showStep(index) {
         stepElement.terminateButton.addEventListener('click', () => {
             recordStepStatus(stepElement).then(recorded => {
                 if (!recorded) return;
+                currentTestIndex = selectedTests.length;
+                currentStepIndex = 0;
                 showStatistics();
             });
         });
@@ -781,7 +783,18 @@ function renderNotes() {
     container.innerHTML = notes.map(note => `
         <div class="note-card ${note.isAutomatic ? 'automatic' : ''}" data-id="${note.id}">
             <h3>${note.title}</h3>
-            <div class="context">${note.context} - ${new Date(note.date).toLocaleDateString()}</div>
+            <div class="context">
+                <span>${note.context}</span>
+                <span>${new Date(note.date).toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(/\//g, '-')}</span>
+            </div>
             <div class="content">${note.content}</div>
             <button class="delete-note">Delete</button>
             <button class="view-note">View</button>
@@ -810,7 +823,7 @@ document.getElementById('save-note').addEventListener('click', () => {
     if (title && content) {
         let context = 'Manual Note';
         let isAutomatic = false;
-        if (modal.dataset.nextStep) {
+        if (modal.dataset.nextStep && selectedTests && selectedTests.length > 0 && currentTestIndex < selectedTests.length) {
             const selectedTest = tests[selectedTests[currentTestIndex]];
             const currentStep = selectedTest["Test Steps"][parseInt(modal.dataset.nextStep)-1];
             context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
@@ -819,6 +832,8 @@ document.getElementById('save-note').addEventListener('click', () => {
             //Update step comment with note content
             const existingComment = currentStep.comment || '';
             currentStep.comment = existingComment ? `${existingComment}\nTest Data: ${content}` : `Test Data: ${content}`;
+        } else if (!document.getElementById('statistics').classList.contains('hidden')){
+            context = 'Statistics View';
         } else {
             const selectedTest = tests[selectedTests[currentTestIndex]];
             const currentStep =selectedTest["Test Steps"][currentStepIndex];
@@ -853,7 +868,18 @@ document.getElementById('notes-list').addEventListener('click', (e) => {
             modal.innerHTML = `
                 <div class="modal-content">
                     <h2>${note.title}</h2>
-                    <div class="context">${note.context} - ${new Date(note.date).toLocaleDateString()}</div>
+                    <div class="context">
+                        <span>${note.context}</span>
+                        <span>${new Date(note.date).toLocaleString('en-GB', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        }).replace(/\//g, '-')}</span>
+                    </div>
                     <div class="content">${note.content}</div>
                     <button onclick="document.getElementById('view-note-modal').classList.remove('open')">Close</button>
                 </div>

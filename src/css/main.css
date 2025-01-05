@@ -267,6 +267,9 @@ input[type="file"] {
     font-size: 0.8rem;
     color: #6c757d;
     margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 .note-card .content {
     font-size: 0.9rem;
