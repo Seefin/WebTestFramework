@@ -1,0 +1,46 @@
+{
+    "$schema":"https://test.findlays.io/public/WebTestFramework.json",
+    "Test Procedure": "TP 01 - Check Things",
+    "Updated": "2025-01-03",
+    "Author": "Connor F",
+    "Description": "Performs tests of the things module",
+    "Tests": [
+        {
+            "Test Name": "User can do things with the things module",
+            "Test Preconditions": [
+                "User {{username}} is logged in",
+                "User has access to the things module",
+                "User has the correct permissions"
+            ],
+            "Test Postconditions": [
+                "User has done things with the things module",
+                "User has done {{that}} with the things module"
+            ],
+            "Test Variables": [
+                "username",
+                "that"
+            ],
+            "Test Steps": [
+                { "step": 1, "stepName":"Step 1", "description": "Do this first as {{username}}."},
+                { "step": 2, "stepName":"Step 2", "description": "Do this next.", "requireNote": true, "notePrompt": "Please record the transaction number" },
+                { "step": 3, "stepName":"Step 3", "description": "Finally, do this." }
+            ]
+        },
+        {
+            "Test Name": "User can't do things with the things module",
+            "Test Preconditions": [
+                "User is logged in",
+                "User has access to the things module",
+                "User does not have the correct permissions"
+            ],
+            "Test Postconditions": [
+                "User has not done things with the things module"
+            ],
+            "Test Steps": [
+                { "step": 1, "stepName":"Step 1", "description": "Do this first."},
+                { "step": 2, "stepName":"Step 2", "description": "Do this next." },
+                { "step": 3, "stepName":"Step 3", "description": "Finally, do this." }
+            ]
+        }
+    ]
+}

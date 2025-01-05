@@ -22,20 +22,20 @@ class StepElement extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
     }
-    
+
     connectedCallback() {
         //Get the HTML template fragment and append it to our shadow DOM
         const template = document.getElementById('step-template').content;
         this.shadowRoot.appendChild(template.cloneNode(true));
-        
+
         //Update the content of the shadow DOM copy with this element's info
         this.shadowRoot.querySelector('h2').textContent = `${this.stepName}`;
         this.shadowRoot.querySelector('p').textContent = `${this.stepDescription}`;
-        
+
         //Get references to the buttons for later use
         this.nextButton = this.shadowRoot.querySelector('.next-step');
         this.terminateButton = this.shadowRoot.querySelector('.terminate-run');
-        
+
     }
     /**
     * @param {{ stepName: string, description: string }} data
@@ -48,7 +48,13 @@ class StepElement extends HTMLElement {
     * @returns {string}
     */
     get status() {
-        return this.shadowRoot.querySelector('input[name="status"]:checked').id;
+        const selected = this.shadowRoot.querySelector('input[name="status"]:checked');
+        if (selected) {
+            return selected.id;
+        } else {
+            console.error('No status selected');
+            return undefined;
+        }
     }
     /**
     * @returns {string}
@@ -77,7 +83,7 @@ let testProcedure = {};
 //Display the file selected by the user
 
 // Add file input change listener
-document.getElementById('file-input').addEventListener('change', function(e) {
+document.getElementById('file-input').addEventListener('change', function (e) {
     const filenameDisplay = document.getElementById('filename-display');
     filenameDisplay.textContent = this.files[0] ? this.files[0].name : '';
 });
@@ -135,13 +141,13 @@ function showTestProcedure(data) {
         </div>
         <button id="continue-button" class="button">Continue</button>
     `;
-    
+
     const checkboxes = document.querySelectorAll('.test-checkbox input');
     const beginButton = document.getElementById('continue-button');
-    
+
     // Initialize selectedTests
     selectedTests = tests.map((_, index) => index);
-    
+
     // Handle checkbox changes
     checkboxes.forEach((checkbox, index) => {
         checkbox.addEventListener('change', () => {
@@ -153,7 +159,7 @@ function showTestProcedure(data) {
             beginButton.disabled = selectedTests.length === 0;
         });
     });
-    
+
     beginButton.addEventListener('click', () => {
         if (selectedTests.length === 0) {
             alert('Please select at least one test to run');
@@ -188,12 +194,12 @@ function showTest(index) {
         return;
     }
     const test = tests[selectedTests[index]];
-    
+
     //Collect and handle variables
     collectVariables(test).then(() => {
         const preconditions = test["Test Preconditions"].map(replaceVariables);
         const postconditions = test["Test Postconditions"].map(replaceVariables);
-        
+
         content.innerHTML = `
     <h2>${test["Test Name"]}</h2>
     <p><strong>Preconditions:</strong></p>
@@ -202,15 +208,15 @@ function showTest(index) {
     <ul>${postconditions.map(cond => `<li>${cond}</li>`).join('')}</ul>
     <button id="begin-button">Begin</button>
     `;
-        
+
         document.getElementById('begin-button').addEventListener('click', () => {
             showStep(0);
         });
     })
-    .catch((error) => {
-        console.error('Error collecting variables:', error);
-        content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
-    });
+        .catch((error) => {
+            console.error('Error collecting variables:', error);
+            content.innerHTML = `<p>Error loading test details. Please try again later.</p>`;
+        });
 }
 
 /**
@@ -230,31 +236,52 @@ function showTest(index) {
 function showStep(index) {
     const selectedTest = tests[selectedTests[currentTestIndex]];
     content.innerHTML = '';
-    if (!selectedTest){
+    if (!selectedTest) {
         showStatistics();
     } else if (index < selectedTest["Test Steps"].length && index >= 0) {
         // Add the step name
         const testHeader = document.createElement('h2');
         testHeader.textContent = selectedTest["Test Name"];
         content.appendChild(testHeader);
-        
+
         //Create and configure step element
         const stepElement = document.createElement('step-element');
         const stepData = { ...selectedTest["Test Steps"][index] };
         stepData.description = replaceVariables(stepData.description);
         stepElement.stepData = stepData;
-        
+
         //Add the new element to the page
         content.appendChild(stepElement);
-        
+
         //Add event listeners to the buttons
         stepElement.nextButton.addEventListener('click', () => {
-            recordStepStatus(stepElement);
-            showStep(index + 1);
+            recordStepStatus(stepElement).then(recorded => {
+                if (!recorded) stepElement.status = 'not-run';
+                
+                const currentStep = selectedTest["Test Steps"][index];
+                if (currentStep.requireNote) {
+                    const modal = document.getElementById('create-note-modal');
+                    const title = document.getElementById('note-title');
+                    const content = document.getElementById('note-content');
+                    const prompt = document.querySelector('.note-prompt');
+
+                    title.value = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
+                    content.value = '';
+                    prompt.textContent = currentStep.notePrompt || '';
+                    prompt.style.display = currentStep.notePrompt ? 'block' : 'none';
+
+                    modal.classList.add('open');
+                    modal.dataset.nextStep = index + 1;
+                } else {
+                    showStep(index + 1);
+                }
+            });
         });
         stepElement.terminateButton.addEventListener('click', () => {
-            recordStepStatus(stepElement);
-            showStatistics();
+            recordStepStatus(stepElement).then(recorded => {
+                if (!recorded) return;
+                showStatistics();
+            });
         });
     } else {
         currentTestIndex++;
@@ -280,21 +307,59 @@ function showStep(index) {
 */
 function recordStepStatus(stepElement) {
     const selectedTest = tests[selectedTests[currentTestIndex]];
-    // Check if the current step index is within the bounds of the test steps array
     if (currentStepIndex < selectedTest["Test Steps"].length) {
-        // Get the status and comment from the step element
-        const status = stepElement.status;
-        const comment = stepElement.comment;
-        
-        // Update the status and comment of the current test step
-        selectedTest["Test Steps"][currentStepIndex].status = status;
-        selectedTest["Test Steps"][currentStepIndex].comment = comment;
-        
-        // Increment the current step index to move to the next step
+        let status = stepElement.status;
+        if (!status) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('status-modal');
+                modal.classList.add('open');
+                
+                const confirmButton = document.getElementById('confirm-status');
+                const cancelButton = document.getElementById('cancel-status');
+                
+                const handleConfirm = () => {
+                    const selected = document.querySelector('input[name="modal-status"]:checked');
+                    if (selected) {
+                        modal.classList.remove('open');
+                        cleanup();
+                        const status = selected.value;
+                        selectedTest["Test Steps"][currentStepIndex] = {
+                            ...selectedTest["Test Steps"][currentStepIndex],
+                            status,
+                            comment: stepElement.comment
+                        };
+                        currentStepIndex++;
+                        resolve(true);
+                    }
+                };
+                
+                const handleCancel = () => {
+                    modal.classList.remove('open');
+                    cleanup();
+                    resolve(false);
+                };
+                
+                const cleanup = () => {
+                    confirmButton.removeEventListener('click', handleConfirm);
+                    cancelButton.removeEventListener('click', handleCancel);
+                    document.querySelectorAll('input[name="modal-status"]')
+                        .forEach(radio => radio.checked = false);
+                };
+                
+                confirmButton.addEventListener('click', handleConfirm);
+                cancelButton.addEventListener('click', handleCancel);
+            });
+        }
+        selectedTest["Test Steps"][currentStepIndex] = {
+            ...selectedTest["Test Steps"][currentStepIndex],
+            status,
+            comment: stepElement.comment
+        };
         currentStepIndex++;
+        return Promise.resolve(true);
     } else {
-        // Log an error if the step index is out of bounds
         console.error('Step index out of bounds');
+        return Promise.resolve(false);
     }
 }
 
@@ -335,12 +400,12 @@ function showStatistics() {
         console.error('Missing required elements or data.');
         return;
     }
-    
+
     //Prepare to display statistics
     content.innerHTML = '';
     content.appendChild(statistics);
     statistics.classList.remove('hidden');
-    
+
     //Clear existing table body
     let table_body = statsBody.querySelector('tbody');
     if (!table_body) {
@@ -348,11 +413,11 @@ function showStatistics() {
         statsBody.appendChild(table_body);
     }
     table_body.innerHTML = '';
-    
+
     //Count Steps
     let passCount = 0;
     let totalSteps = 0;
-    
+
     selectedTests.forEach(testIndex => {
         const test = tests[testIndex];
         if (!test["Test Steps"] || !Array.isArray(test["Test Steps"]) || test["Test Steps"].length === 0) {
@@ -366,37 +431,37 @@ function showStatistics() {
         });
         totalSteps += test["Test Steps"].length;
     });
-    
+
     if (totalSteps === 0) {
         //No steps to display
         console.error('No test steps found.');
         return;
     }
-    
+
     //Calculate and display pass rate
     const passRate = (passCount / totalSteps) * 100;
     const summary = document.createElement('div');
     summary.innerHTML = `
         <h2>Test Summary</h2>
-        ${selectedTests.length < tests.length ? 
-        `<p class="partial-run-notice">Completed ${selectedTests.length} of ${tests.length} total tests</p>` 
-        : ''}
+        ${selectedTests.length < tests.length ?
+            `<p class="partial-run-notice">Completed ${selectedTests.length} of ${tests.length} total tests</p>`
+            : ''}
         <p>Pass Rate: ${passRate.toFixed(2)}%</p>
         <button id="toggle-details">Show Details</button>
         <button id="print-report-button" class="button">Print Report</button>
     `;
     content.appendChild(summary);
-    
+
     //Prepare test details nodes
     const details = document.createElement('div');
     details.id = 'details';
     details.classList.add('hidden');
-    
+
     //Create and append table header
     const testHeader = document.createElement('tr');
     testHeader.innerHTML = '<th colspan="3">Tests Run</th>';
     statsBody.appendChild(testHeader);
-    
+
     //Create and append table body
     selectedTests.forEach((testIndex) => {
         const test = tests[testIndex];
@@ -437,7 +502,7 @@ function showStatistics() {
             `;
             stepTable.appendChild(stepRow);
         });
-        
+
         //Add the step table to the step container
         stepContainer.appendChild(stepTable);
         const stepTableRow = document.createElement('tr');
@@ -446,7 +511,7 @@ function showStatistics() {
         stepTableRow.querySelector('td').appendChild(stepContainer);
         stepTableRow.classList.add('hidden')
         statsBody.appendChild(stepTableRow);
-        
+
         //Add event listener to toggle step visibility
         testRow.querySelector('.toggle-steps').addEventListener('click', () => {
             stepTableRow.classList.toggle('hidden');
@@ -454,18 +519,18 @@ function showStatistics() {
             button.textContent = stepTableRow.classList.contains('hidden') ? 'Show Steps' : 'Hide Steps';
         });
     });
-    
+
     //Add the details to the content area
     details.appendChild(statsBody);
     content.appendChild(details);
-    
+
     //Add event listener to toggle details visibility
     document.getElementById('toggle-details').addEventListener('click', () => {
         details.classList.toggle('hidden');
         const button = document.getElementById('toggle-details');
         button.textContent = details.classList.contains('hidden') ? 'Show Details' : 'Hide Details';
     });
-    
+
     //Add event listener to print report button
     document.getElementById('print-report-button').addEventListener('click', printReport);
 }
@@ -495,22 +560,22 @@ function collectVariables(test) {
             resolve();
             return;
         }
-        
+
         const variableInputs = variables.map(v => `
             <div class="variable-input-row">
                 <label for="${v}">${v}</label>
                 <input type="text" id="${v}" name="${v}" required>
             </div>
         `).join('');
-            
-            content.innerHTML = `
+
+        content.innerHTML = `
                 <form id="variable-form" class="variable-input-container">
                     <h2>This test requires the following information:</h2>
                     ${variableInputs}
                     <button type="submit" class="button">Save</button>
                 </form>
             `;
-            
+
         document.getElementById('variable-form').addEventListener('submit', (e) => {
             e.preventDefault();
             testVariables.clear();
@@ -524,7 +589,7 @@ function collectVariables(test) {
         });
     });
 }
-    
+
 /**
 * Replaces variables in the given text with their corresponding values from the `testVariables` map.
 * Variables in the text should be in the format {{variableName}}.
@@ -553,7 +618,7 @@ function replaceVariables(text) {
         return match;
     });
 }
-    
+
 /**
 * Generates a printable report of the test session.
 *
@@ -594,8 +659,8 @@ function printReport() {
                     </thead>
                     <tbody>
                         ${selectedTests.map(testIndex => {
-                        const test = tests[testIndex];
-                        return test["Test Steps"].map((step, stepIndex) => `
+        const test = tests[testIndex];
+        return test["Test Steps"].map((step, stepIndex) => `
                                             <tr>
                                                 <td>${test["Test Name"]}</td>
                                                 <td>${step.stepName}</td>
@@ -603,7 +668,7 @@ function printReport() {
                                                 <td>${step.comment || ''}</td>
                                             </tr>
                                         `).join('');
-                        }).join('')}
+    }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -622,15 +687,15 @@ function printReport() {
 const notes = JSON.parse(localStorage.getItem('wtf-notes') || '[]');
 
 function saveNotes() {
-    localStorage.setItem('wtf-notes', JSON.stringify(notes));   
+    localStorage.setItem('wtf-notes', JSON.stringify(notes));
 }
 
-function addNote(title, content) {
+function addNote(title, content, context) {
     const note = {
         id: Date.now(),
         title,
         content,
-        context: window.location.hash || 'Home',
+        context: context || 'Home',
         date: new Date().toISOString(),
     };
     notes.unshift(note);
@@ -638,7 +703,7 @@ function addNote(title, content) {
     renderNotes();
 }
 
-function deleteNote(id){
+function deleteNote(id) {
     const index = notes.findIndex(note => note.id == id);
     if (index >= -1) {
         notes.splice(index, 1);
@@ -647,7 +712,7 @@ function deleteNote(id){
     }
 }
 
-function renderNotes(){
+function renderNotes() {
     const container = document.getElementById('notes-list');
     container.innerHTML = notes.map(note => `
         <div class="note-card" data-id="${note.id}">
@@ -673,11 +738,20 @@ document.getElementById('new-note').addEventListener('click', () => {
 document.getElementById('save-note').addEventListener('click', () => {
     const title = document.getElementById('note-title').value;
     const content = document.getElementById('note-content').value;
-    if (title && content){
-        addNote(title, content);
-        document.getElementById('create-note-modal').classList.remove('open');
+    const modal = document.getElementById('create-note-modal');
+
+    if (title && content) {
+        const selectedTest = tests[selectedTests[currentTestIndex]];
+        const context = `${selectedTest["Test Name"]} - Step ${currentStepIndex + 1}`;
+        addNote(title, content, context);
+        modal.classList.remove('open');
         document.getElementById('note-title').value = '';
         document.getElementById('note-content').value = '';
+
+        if (modal.dataset.nextStep) {
+            showStep(parseInt(modal.dataset.nextStep));
+            modal.dataset.nextStep = '';
+        }
     }
 });
 
