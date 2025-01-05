@@ -95,6 +95,9 @@ tr:hover {
 .test-step-header {
     background-color: #80bcfd;
 }
+.comment {
+    white-space: pre-line;
+}
 button {
     background-color: #007bff;
     color: white;

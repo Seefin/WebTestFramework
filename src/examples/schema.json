@@ -60,6 +60,18 @@
                                 },
                                 "notePrompt": {
                                     "type": "string"
+                                },
+                                "referenceNote": {
+                                    "type": "object",
+                                    "properties": {
+                                        "testName": {
+                                            "type": "string"
+                                        },
+                                        "stepName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": ["testName", "stepName"]
                                 }
                             },
                             "required": ["step", "stepName", "description"]

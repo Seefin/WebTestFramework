@@ -234,19 +234,19 @@ function showTest(index) {
 * showTest(0);
 */
 function showStep(index) {
-    const selectedTest = tests[selectedTests[currentTestIndex]];
+    const currentTest = tests[selectedTests[currentTestIndex]];
     content.innerHTML = '';
-    if (!selectedTest) {
+    if (!currentTest) {
         showStatistics();
-    } else if (index < selectedTest["Test Steps"].length && index >= 0) {
+    } else if (index < currentTest["Test Steps"].length && index >= 0) {
         // Add the step name
         const testHeader = document.createElement('h2');
-        testHeader.textContent = selectedTest["Test Name"];
+        testHeader.textContent = currentTest["Test Name"];
         content.appendChild(testHeader);
 
         //Create and configure step element
         const stepElement = document.createElement('step-element');
-        const stepData = { ...selectedTest["Test Steps"][index] };
+        const stepData = { ...currentTest["Test Steps"][index] };
         stepData.description = replaceVariables(stepData.description);
         stepElement.stepData = stepData;
 
@@ -265,7 +265,7 @@ function showStep(index) {
                     const content = document.getElementById('note-content');
                     const prompt = document.querySelector('.note-prompt');
 
-                    title.value = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
+                    title.value = `${currentTest["Test Name"]} - ${currentStep.stepName}`;
                     content.value = '';
                     prompt.textContent = currentStep.notePrompt || '';
                     prompt.style.display = currentStep.notePrompt ? 'block' : 'none';
@@ -309,6 +309,19 @@ function recordStepStatus(stepElement) {
     const selectedTest = tests[selectedTests[currentTestIndex]];
     if (currentStepIndex < selectedTest["Test Steps"].length) {
         let status = stepElement.status;
+        const currentStep = selectedTest["Test Steps"][currentStepIndex];
+        let comment = stepElement.comment;
+
+        //Handle referenced notes
+        if (currentStep.referenceNote) {
+            const noteContent = getNoteContent(
+                currentStep.referenceNote.testName,
+                currentStep.referenceNote.stepName
+            );
+            if (comment) comment += '\n';
+            comment += `Test Data from previous step: ${noteContent}`;
+        }
+
         if (!status) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('status-modal');
@@ -353,7 +366,7 @@ function recordStepStatus(stepElement) {
         selectedTest["Test Steps"][currentStepIndex] = {
             ...selectedTest["Test Steps"][currentStepIndex],
             status,
-            comment: stepElement.comment
+            comment
         };
         currentStepIndex++;
         return Promise.resolve(true);
@@ -498,7 +511,7 @@ function showStatistics() {
             stepRow.innerHTML = `
                 <td>${step.stepName}</td>
                 <td>${stepStatus}</td>
-                <td>${stepComment}</td>
+                <td class="comment">${stepComment}</td>
             `;
             stepTable.appendChild(stepRow);
         });
@@ -609,7 +622,9 @@ function replaceVariables(text) {
         //Input is null or undefined
         return text;
     }
-    return text.replace(/{{(\w+)}}/g, (match, variable) => {
+    
+    // First replace test variables
+    text = text.replace(/{{(\w+)}}/g, (match, variable) => {
         if (testVariables && testVariables.size > 0) {
             if (testVariables.has(variable)) {
                 return testVariables.get(variable);
@@ -617,6 +632,21 @@ function replaceVariables(text) {
         }
         return match;
     });
+    
+    // Then replace note references
+    const selectedTest = tests[selectedTests[currentTestIndex]];
+    const currentStep = selectedTest["Test Steps"][currentStepIndex];
+    
+    if (currentStep.referenceNote) {
+        text = text.replace(/\[\[note\]\]/g, () => {
+            return getNoteContent(
+                currentStep.referenceNote.testName,
+                currentStep.referenceNote.stepName
+            );
+        });
+    }
+    
+    return text;
 }
 
 /**
@@ -741,8 +771,20 @@ document.getElementById('save-note').addEventListener('click', () => {
     const modal = document.getElementById('create-note-modal');
 
     if (title && content) {
-        const selectedTest = tests[selectedTests[currentTestIndex]];
-        const context = `${selectedTest["Test Name"]} - Step ${currentStepIndex + 1}`;
+        let context = 'Manual Note';
+        if (modal.dataset.nextStep) {
+            const selectedTest = tests[selectedTests[currentTestIndex]];
+            const currentStep = selectedTest["Test Steps"][parseInt(modal.dataset.nextStep)-1];
+            context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
+
+            //Update step comment with note content
+            const existingComment = currentStep.comment || '';
+            currentStep.comment = existingComment ? `${existingComment}\nTest Data: ${content}` : `Test Data: ${content}`;
+        } else {
+            const selectedTest = tests[selectedTests[currentTestIndex]];
+            const currentStep = selectedTest["Test Steps"][currentStepIndex];
+            context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
+        }
         addNote(title, content, context);
         modal.classList.remove('open');
         document.getElementById('note-title').value = '';
@@ -781,5 +823,12 @@ document.getElementById('notes-list').addEventListener('click', (e) => {
         }
     }
 });
+
+function getNoteContent(testName, stepName) {
+    const note = notes.find(note => 
+        note.context === `${testName} - ${stepName}`
+    );
+    return note ? note.content : 'N/A';
+}
 
 renderNotes();

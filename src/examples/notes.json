@@ -38,7 +38,15 @@
             ],
             "Test Steps": [
                 { "step": 1, "stepName":"Step 1", "description": "Do this first."},
-                { "step": 2, "stepName":"Step 2", "description": "Do this next." },
+                { 
+                    "step": 2, 
+                    "stepName":"Step 2", 
+                    "description": "Check transaction number [[note]] is invalid.", 
+                    "referenceNote": {
+                        "testName": "User can do things with the things module",
+                        "stepName": "Step 2"
+                    }
+                },
                 { "step": 3, "stepName":"Step 3", "description": "Finally, do this." }
             ]
         }
