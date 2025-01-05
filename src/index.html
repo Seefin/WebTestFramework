@@ -47,7 +47,7 @@
         </p>
         <div class="file-input-container">
             <label for="file-input">Choose File</label>
-        <input type="file" id="file-input" />
+            <input type="file" id="file-input" />
             <div id="filename-display" class="filename-display"></div>
             <button class="load-button">Validate & Begin</button>
         </div>
@@ -62,6 +62,18 @@
              correctly.
          -->
         <style>
+            hr {
+                color: #dee2e6;
+            }
+            input,
+            textarea {
+                width: 60%;
+                padding: 0.75rem;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                font-family: inherit;
+                font-size: 1rem;
+            }
             button {
                 background-color: #007bff;
                 color: white;
@@ -78,7 +90,7 @@
             .radio-group {
                 margin: 1rem 0;
                 display: flex;
-                gap: 1rem;
+                gap: 11rem;
             }
             .radio-label {
                 display: flex;
@@ -101,10 +113,17 @@
             .radio-label:hover input[type="radio"] {
                 border-color: #0056b3;
             }
+            .terminate-run {
+                background-color: #de2200;
+            }
+            .terminate-run:hover{
+                background-color: #9e1800;
+            }
         </style>
         <div class="step">
             <h2></h2>
             <p></p>
+            <hr />
             <div class="radio-group">
                 <label  class="radio-label">
                     <input type="radio" name="status" id="Pass" class="status"> Pass
