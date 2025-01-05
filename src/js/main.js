@@ -796,6 +796,9 @@ document.querySelector('.sidebar-toggle').addEventListener('click', () => {
 
 document.getElementById('new-note').addEventListener('click', () => {
     const modal = document.getElementById('create-note-modal');
+    const prompt = document.querySelector('.note-prompt');
+    prompt.textContent = '';
+    prompt.style.display = 'none';
     modal.classList.add('open');
 });
 
@@ -818,7 +821,7 @@ document.getElementById('save-note').addEventListener('click', () => {
             currentStep.comment = existingComment ? `${existingComment}\nTest Data: ${content}` : `Test Data: ${content}`;
         } else {
             const selectedTest = tests[selectedTests[currentTestIndex]];
-            const currentStep = selectedTest["Test Steps"][currentStepIndex];
+            const currentStep =selectedTest["Test Steps"][currentStepIndex];
             context = `${selectedTest["Test Name"]} - ${currentStep.stepName}`;
         }
         addNote(title, content, context, isAutomatic);
