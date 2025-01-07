@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Procedure Editor</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+
+<body>
+    <header>
+        <h1>WTF Editor</h1>
+    </header>
+    <main id="editor-content">
+        <section id="editor-landing">
+            <h2>Welcome to the WTF Editor</h2>
+            <button id="create-new" class="button">Create New Test Procedure</button>
+            <div class="file-input-container">
+                <label for="file-input">Load Existing Test Procedure</label>
+                <input type="file" id="file-input" />
+                <div id="filename-display" class="filename-display"></div>
+                <button id="load-existing" class="button">Load</button>
+            </div>
+        </section>
+        <section id="editor-form" class="hidden">
+            <h2>Edit Test Procedure</h2>
+            <form id="metadata-form">
+                <label for="procedure-name">Procedure Name:</label>
+                <input type="text" id="procedure-name" placeholder="Enter procedure name" required>
+                <label for="procedure-updated">Updated:</label>
+                <input type="date" id="procedure-updated" required>
+                <label for="procedure-author">Author:</label>
+                <input type="text" id="procedure-author" placeholder="Enter author name" required>
+                <label for="procedure-description">Description:</label>
+                <textarea id="procedure-description" placeholder="Enter description" required></textarea>
+            </form>
+            <h3>Test Procedure JSON</h3>
+            <textarea id="json-content" placeholder="Enter JSON content"></textarea>
+            <div id="json-error" class="hidden">Invalid JSON</div>
+            <button id="save-procedure" class="button">Save Procedure</button>
+            <button id="back-to-landing" class="button">Back</button>
+        </section>
+    </main>
+    <footer>
+        <button id="viewer-button" class="button">Open Viewer</button>
+    </footer>
+    <script>
+            document.getElementById('viewer-button').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+    <script src="js/editor.js"></script>
+</body>
+
+</html>

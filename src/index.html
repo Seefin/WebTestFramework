@@ -35,6 +35,7 @@
     </main>
     <footer>
         <p></p>
+        <button id="editor-button" class="button">Open Editor</button>
     </footer>
     <section id="sidebar">
         <div class="sidebar">
@@ -208,6 +209,11 @@
         </div>
     </section>
     <script src="js/main.js"></script>
+    <script>
+        document.getElementById('editor-button').addEventListener('click', () => {
+            window.location.href = 'editor.html';
+        });
+    </script>
 </body>
 
 </html>
