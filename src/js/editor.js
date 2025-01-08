@@ -61,11 +61,13 @@ function clearForm() {
 }
 
 function storeProcedure(jsonContent) {
-    if (!isValidJSON(jsonContent)){
+    const validationResult = isValidJSON(jsonContent);
+    if (!validationResult.valid){
         const errorMessage = document.getElementById('json-error');
-        errorMessage.innerText = MESSAGES.ERR_INVALID;
+        errorMessage.innerText = `${MESSAGES.ERR_INVALID}: ${validationResult.message}`;
         errorMessage.classList.remove('hidden');
         document.getElementById('json-content').classList.add('error');
+        highlightError(validationResult.line, validationResult.column, document.getElementById('json-content'));
         return;
     }
     const procedure = {
@@ -87,8 +89,29 @@ function storeProcedure(jsonContent) {
 function isValidJSON(jsonContent) {
     try {
         JSON.parse(jsonContent);
-        return true;
+        return {valid: true};
     } catch (error) {
-        return false;
+        const lineMatch = error.message.match(/line (\d+)/i);
+        const columnMatch = error.message.match(/column (\d+)/i);
+        const line = lineMatch ? parseInt(lineMatch[1],10) : null;
+        const column = columnMatch ? parseInt(columnMatch[1],10) : null;
+        return {
+            valid: false,
+            message: error.message,
+            line: line,
+            column: column
+        };
     }
+}
+
+function highlightError(line,column,textArea){
+    const lines = textArea.value.split('\n');
+    let start = 0;
+    for (let i = 0; i < line - 1; i++) {
+        start += lines[i].length + 1;
+    }
+    const end = start + column -1;
+    textArea.focus();
+    textArea.setSelectionRange(end, end + 1);
+    textArea.scrollTop = textArea.scrollHeight;
 }
