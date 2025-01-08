@@ -59,3 +59,15 @@ button:hover {
     font-size: 0.9rem;
     margin-top: 0.5rem;
 }
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+}
+.form-column {
+    flex: 1;
+    margin-right: 3rem;
+}
+.form-column:last-child {
+    margin-right: 0;
+}

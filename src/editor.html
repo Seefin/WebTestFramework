@@ -28,10 +28,16 @@
             <form id="metadata-form">
                 <label for="procedure-name">Procedure Name:</label>
                 <input type="text" id="procedure-name" placeholder="Enter procedure name" required>
-                <label for="procedure-updated">Updated:</label>
-                <input type="date" id="procedure-updated" required>
-                <label for="procedure-author">Author:</label>
-                <input type="text" id="procedure-author" placeholder="Enter author name" required>
+                <div class="form-row">
+                    <div class="form-column">
+                        <label for="procedure-updated">Updated:</label>
+                        <input type="date" id="procedure-updated" required>
+                    </div>
+                    <div class="form-column">
+                        <label for="procedure-author">Author:</label>
+                        <input type="text" id="procedure-author" placeholder="Enter author name" required>
+                    </div>
+                </div>
                 <label for="procedure-description">Description:</label>
                 <textarea id="procedure-description" placeholder="Enter description" required></textarea>
             </form>
@@ -46,7 +52,7 @@
         <button id="viewer-button" class="button">Open Viewer</button>
     </footer>
     <script>
-            document.getElementById('viewer-button').addEventListener('click', () => {
+        document.getElementById('viewer-button').addEventListener('click', () => {
             window.location.href = 'index.html';
         });
     </script>
