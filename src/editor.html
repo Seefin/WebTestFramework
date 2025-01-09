@@ -41,20 +41,43 @@
                 <label for="procedure-description">Description:</label>
                 <textarea id="procedure-description" placeholder="Enter description" required></textarea>
             </form>
-            <h3>Test Procedure JSON</h3>
-            <textarea id="json-content" placeholder="Enter JSON content"></textarea>
-            <div id="json-error" class="hidden">Invalid JSON</div>
-            <button id="save-procedure" class="button">Save Procedure</button>
-            <button id="back-to-landing" class="button">Back</button>
+            <h3>Tests</h3>
+            <div id="test-list"></div>
+            <button id="add-test" class="button">Add Test</button>
+            <button type="button" id="save-procedure" class="button">Save</button>
+            <button type="button" id="back-to-landing" class="button">Cancel</button>
+            </section>
+            <section id="test-editor" class="hidden">
+                <h2>Edit Test</h2>
+                <form id="test-form">
+                    <label for="test-name">Test Name</label>
+                    <input type="text" id="test-name" required>
+                    <label>Pre-Conditions</label>
+                    <div id="preconditions-list">
+                        <input type="text" class="precondition-input">
+                    </div>
+                    <button type="button" id="add-precondition" class="button">Add Pre-Condition</button>
+
+                    <label>Post-Conditions</label>
+                    <div id="postconditions-list">
+                        <input type="text" class="postcondition-input">
+                    </div>
+                    <button type="button" id="add-postcondition" class="button">Add Post-Condition</button>
+
+                    <label for="test-steps">Steps JSON</label>
+                    <textarea id="test-steps">  </textarea>
+                    <div id="json-error" class="hidden"></div>
+                    <button type="submit" class="button">Save Test</button>
+                    <button type="button" id="cancel-test" class="button">Cancel</button>
+                </form>
+            </section>
         </section>
     </main>
     <footer>
         <button id="viewer-button" class="button">Open Viewer</button>
     </footer>
     <script>
-        document.getElementById('viewer-button').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
+
     </script>
     <script src="js/editor.js"></script>
 </body>

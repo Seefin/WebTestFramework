@@ -71,3 +71,47 @@ button:hover {
 .form-column:last-child {
     margin-right: 0;
 }
+.test-card {
+    border: 1px solid #004d40;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.test-card-buttons{
+    display: flex;
+    gap: 0.5rem;
+}
+#test-list {
+    margin-bottom: 1rem;
+}
+.precondition-input,
+.postcondition-input {
+    margin-bottom: 0.5rem;
+}
+#test-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.condition-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.condition-row input {
+    flex: 1;
+    margin-bottom: 0;
+}
+.condition-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+.condition-buttons button {
+    margin-top: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+}
