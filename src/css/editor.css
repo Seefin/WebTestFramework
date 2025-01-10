@@ -115,3 +115,26 @@ button:hover {
     padding: 0.25rem 0.5rem;
     font-size: 0.9rem;
 }
+.step-card {
+    border: 1px solid #004d40;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+.step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.step-title {
+    font-weight: bold;
+}
+.step-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+#steps-list {
+    margin-bottom: 1rem;
+}
