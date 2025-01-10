@@ -204,6 +204,7 @@ document.getElementById(ELEMENT_IDS.STEP_FORM).addEventListener('submit', (e) =>
 document.getElementById('add-step').addEventListener('click', () => {
     clearStepForm();
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.add('hidden');
+    document.getElementById(ELEMENT_IDS.STEP_NUMBER).value = currentSteps.length + 1;
     document.getElementById(ELEMENT_IDS.STEP_EDITOR).classList.remove('hidden');
 });
 
@@ -290,13 +291,13 @@ function renderTests(testList) {
 
 function renderSteps() {
     const stepsList = document.getElementById(ELEMENT_IDS.STEP_LIST);
-    stepsList.innerHTML = currentSteps.map((step, index) => `
-        <div class="step-card">
+    stepsList.innerHTML = currentSteps.map((step) => `
+        <div class="step-card" data-step-number="${step.step}" data-step-name="${step.stepName}">
             <div class="step-header">
-                <span class="step-title">Step ${step.step}: ${step.stepName}</span>
+                <span class="step-title">${step.step}: ${step.stepName}</span>
                 <div class="test-card-buttons">
-                    <button type="button" onclick="editStep(${index})" class="button">Edit</button>
-                    <button type="button" onclick="deleteStep(${index})" class="button">Delete</button>
+                    <button type="button" onclick="editStep(this)" class="button">Edit</button>
+                    <button type="button" onclick="deleteStep(this)" class="button">Delete</button>
                 </div>
             </div>
             <div class="step-description">${step.description}</div>
@@ -355,9 +356,13 @@ function deleteTestCondition(button) {
 }
 
 // Step CRUD code
-function editStep(index) {
-    currentStepIndex = index;
-    const step = currentSteps[index];
+function editStep(button) {
+    const card = button.closest('.step-card');
+    const step = currentSteps.find(step => step.step === parseInt(card.dataset.stepNumber) && step.stepName === card.dataset.stepName);
+    if (!step) {
+        return;
+    }
+    currentStepIndex = currentSteps.indexOf(step);
     document.getElementById(ELEMENT_IDS.STEP_NUMBER).value = step.step;
     document.getElementById(ELEMENT_IDS.STEP_NAME).value = step.stepName;
     document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).value = step.description;
@@ -365,14 +370,11 @@ function editStep(index) {
     document.getElementById(ELEMENT_IDS.STEP_EDITOR).classList.remove('hidden');
 }
 
-function deleteStep(index) {
-    console.debug(index);
-    if ( (!index && index !== 0) || index < 0 || index >= currentSteps.length) {
-        console.debug(currentSteps.length);
-        return;
-    }
-    if (confirm(`Are you sure you want to delete step ${currentSteps[index].stepName}?`)) {
-        currentSteps.splice(index, 1);
+function deleteStep(button) {
+    const card = button.closest('.step-card');
+    if (confirm(`Are you sure you want to delete step ${card.dataset.stepName}?`)) {
+        currentSteps = currentSteps.filter(step => step.step !== parseInt(card.dataset.stepNumber) && step.stepName !== card.dataset.stepName);
+        card.remove();
         renderSteps();
     }
 }
