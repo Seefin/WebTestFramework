@@ -128,17 +128,27 @@ document.getElementById('cancel-test').addEventListener('click', () => {
 });
 
 document.getElementById('add-precondition').addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'precondition-input';
-    document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).appendChild(input);
+    const container = document.createElement('div');
+    container.className = 'condition-row';
+    container.innerHTML = `
+        <input type="text" class="precondition-input">
+        <div class="condition-buttons">
+            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+        </div>
+    `;
+    document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).appendChild(container);
 });
 
 document.getElementById('add-postcondition').addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'postcondition-input';
-    document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST).appendChild(input);
+    const container = document.createElement('div');
+    container.className = 'condition-row';
+    container.innerHTML = `
+        <input type="text" class="postcondition-input">
+        <div class="condition-buttons">
+            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+        </div>
+    `;
+    document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST).appendChild(container);
 });
 
 function loadProcedure(procedure) {
@@ -166,11 +176,17 @@ function clearTestForm() {
     document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).innerHTML = `
     <div class="condition-row">
         <input type="text" class="precondition-input">
+        <div class="condition-buttons">
+            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+        </div>
     </div>
     `;
     document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST).innerHTML = `
         <div class="condition-row">
             <input type="text" class="postcondition-input">
+            <div class="condition-buttons">
+                <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+            </div>
         </div>
     `;
     document.getElementById(ELEMENT_IDS.TEST_STEPS).value = '';
@@ -218,11 +234,11 @@ function editTest(index) {
 
     const preList = document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST);
     preList.innerHTML = test["Test Preconditions"]
-        .map((pre, i) => `
+        .map((pre) => `
             <div class="condition-row">
                 <input type="text" class="precondition-input" value="${pre}">
                 <div class="condition-buttons">
-                    <button type="button" onclick="deleteTestPreCondition(${i})" class="button">Delete</button>
+                    <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
                 </div>
             </div>
             `)
@@ -230,11 +246,11 @@ function editTest(index) {
 
     const postList = document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST);
     postList.innerHTML = test["Test Postconditions"]
-        .map((post, i) => `
+        .map((post) => `
             <div class="condition-row">
                 <input type="text" class="postcondition-input" value="${post}">
                 <div class="condition-buttons">
-                    <button type="button" onclick="deleteTestPostCondition(${i})" class="button">Delete</button>
+                    <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
                 </div>
             </div>
         `)
@@ -255,14 +271,8 @@ function deleteTest(index) {
     }
 }
 
-function deleteTestPreCondition(index) {
-    const inputs = document.querySelectorAll('.precondition-input');
-    inputs[index].parentElement.remove();
-}
-
-function deleteTestPostCondition(index) {
-    const inputs = document.querySelectorAll('.postcondition-input');
-    inputs[index].parentElement.remove();
+function deleteTestCondition(button) {
+    button.closest('.condition-row').remove();
 }
 
 function isValidJSON(jsonContent) {
