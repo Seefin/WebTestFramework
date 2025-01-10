@@ -46,6 +46,8 @@ document.getElementById('create-new').addEventListener('click', () => {
     document.getElementById(ELEMENT_IDS.EDITOR_LANDING).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.EDITOR_FORM).classList.remove('hidden');
     clearProcedureForm();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById(ELEMENT_IDS.PROCEDURE_UPDATED).value = today;
 });
 
 document.getElementById('viewer-button').addEventListener('click', () => {
