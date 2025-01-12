@@ -38,6 +38,9 @@ const MESSAGES = {
  * @property {string} TEST_LIST - The ID of the test list element.
  * @property {string} TEST_NAME - The ID of the test name element.
  * @property {string} TEST_STEPS - The ID of the test steps element.
+ * @property {string} VARIABLES_LIST - The ID of the variables list element.
+ * @property {string} VARIABLES_PANEL - The ID of the variables panel element.
+ * @property {string} VARIABLES_LIST_PANEL - The ID of the variables list panel element.
  */
 const ELEMENT_IDS = {
     EDITOR_FORM: 'editor-form',
@@ -59,7 +62,10 @@ const ELEMENT_IDS = {
     TEST_FORM: 'test-form',
     TEST_LIST: 'test-list',
     TEST_NAME: 'test-name',
-    TEST_STEPS: 'test-steps'
+    TEST_STEPS: 'test-steps',
+    VARIABLES_LIST: 'variables-list',
+    VARIABLES_PANEL: 'variables-panel',
+    VARIABLES_LIST_PANEL: 'variables-list-panel'
 }
 /**
  * Array of all tests in the current procedure.
@@ -133,6 +139,7 @@ document.getElementById('test-form').addEventListener('submit', (e) => {
         "Test Name": document.getElementById(ELEMENT_IDS.TEST_NAME).value,
         "Test Preconditions": Array.from(document.querySelectorAll('.precondition-input')).map(input => input.value).filter(Boolean),
         "Test Postconditions": Array.from(document.querySelectorAll('.postcondition-input')).map(input => input.value).filter(Boolean),
+        "Test Variables": Array.from(document.querySelectorAll('.variable-input')).map(input => input.value).filter(Boolean),
         "Test Steps": currentSteps
     };
 
@@ -164,6 +171,7 @@ document.getElementById('add-precondition').addEventListener('click', () => {
         </div>
     `;
     document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).appendChild(container);
+    updateInputWithVariableButton(container.querySelector('input'));
 });
 
 document.getElementById('add-postcondition').addEventListener('click', () => {
@@ -176,6 +184,20 @@ document.getElementById('add-postcondition').addEventListener('click', () => {
         </div>
     `;
     document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST).appendChild(container);
+    updateInputWithVariableButton(container.querySelector('input'));
+});
+
+document.getElementById('add-variable').addEventListener('click', () => {
+    const container = document.createElement('div');
+    container.className = 'condition-row';
+    container.innerHTML = `
+        <input type="text" class="variable-input" placeholder="Enter variable name">
+        <div class="condition-buttons">
+            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+        </div>
+    `;
+    document.getElementById(ELEMENT_IDS.VARIABLES_LIST).appendChild(container);
+    updateInputWithVariableButton(container.querySelector('input'));
 });
 
 document.getElementById(ELEMENT_IDS.STEP_FORM).addEventListener('submit', (e) => {
@@ -266,6 +288,15 @@ function clearTestForm() {
             </div>
         </div>
     `;
+
+    document.getElementById(ELEMENT_IDS.VARIABLES_LIST).innerHTML = `
+    <div class="condition-row">
+        <input type="text" class="variable-input" placeholder="Enter variable name">
+        <div class="condition-buttons">
+            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+        </div>
+    </div>
+`;
 }
 
 function clearStepForm() {
@@ -336,6 +367,18 @@ function editTest(index) {
         `)
         .join('');
 
+    const varList = document.getElementById(ELEMENT_IDS.VARIABLES_LIST);
+    varList.innerHTML = (test["Test Variables"] || [])
+        .map((variable) => `
+            <div class="condition-row">
+                <input type="text" class="variable-input" value="${variable}">
+                <div class="condition-buttons">
+                    <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
+                </div>
+            </div>
+        `)
+        .join('');
+
     renderSteps();
     document.getElementById(ELEMENT_IDS.EDITOR_FORM).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.remove('hidden');
@@ -377,4 +420,78 @@ function deleteStep(button) {
         card.remove();
         renderSteps();
     }
+}
+
+// Add new functions for variable handling
+function toggleVariablesPanel() {
+    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.toggle('hidden');
+}
+
+function showVariablesPicker(button) {
+    const input = button.previousElementSibling;
+    const panel = document.getElementById(ELEMENT_IDS.VARIABLES_PANEL);
+    panel.classList.remove('hidden');
+    
+    // Highlight the input being edited
+    document.querySelectorAll('.input-group input').forEach(inp => 
+        inp.classList.remove('active-input'));
+    input.classList.add('active-input');
+    
+    renderAvailableVariables();
+}
+
+function renderAvailableVariables() {
+    const variablesList = document.getElementById(ELEMENT_IDS.VARIABLES_LIST_PANEL);
+    const allVariables = new Set();
+    
+    // Collect variables from all tests
+    currentTests.forEach(test => {
+        if (test["Test Variables"]) {
+            test["Test Variables"].forEach(v => allVariables.add(v));
+        }
+    });
+    
+    // Add variables from current test form
+    Array.from(document.querySelectorAll('.variable-input'))
+        .map(input => input.value)
+        .filter(Boolean)
+        .forEach(v => allVariables.add(v));
+    
+    variablesList.innerHTML = Array.from(allVariables)
+        .map(variable => `
+            <div class="variable-item" onclick="insertVariable('${variable}')">
+                {{${variable}}}
+            </div>
+        `).join('');
+}
+
+function insertVariable(variable) {
+    const activeInput = document.querySelector('.active-input');
+    if (!activeInput) return;
+    
+    const cursorPos = activeInput.selectionStart;
+    const textBefore = activeInput.value.substring(0, cursorPos);
+    const textAfter = activeInput.value.substring(cursorPos);
+    
+    activeInput.value = `${textBefore}{{${variable}}}${textAfter}`;
+    activeInput.classList.remove('active-input');
+    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.add('hidden');
+}
+
+// Update test form inputs to use input groups
+function updateInputWithVariableButton(input) {
+    const group = document.createElement('div');
+    group.className = 'input-group';
+    input.parentNode.insertBefore(group, input);
+    group.appendChild(input);
+    
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'insert-variable-button';
+    button.innerHTML = `
+        <span class="tooltip">Insert Variable</span>
+        {{x}}
+    `;
+    button.onclick = () => showVariablesPicker(button);
+    group.appendChild(button);
 }

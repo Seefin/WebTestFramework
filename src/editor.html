@@ -52,17 +52,34 @@
                 <form id="test-form">
                     <label for="test-name">Test Name</label>
                     <input type="text" id="test-name" required>
-                    <label>Pre-Conditions</label>
+                    <label for="preconditions-list">Pre-Conditions</label>
                     <div id="preconditions-list">
-                        <input type="text" class="precondition-input">
+                        <div class="input-group">
+                            <input type="text" class="precondition-input">
+                            <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+                                <span class="tooltip">Insert Variable</span>
+                                {{x}}
+                            </button>
+                        </div>
                     </div>
                     <button type="button" id="add-precondition" class="button">Add Pre-Condition</button>
 
-                    <label>Post-Conditions</label>
+                    <label for="postconditions-list">Post-Conditions</label>
                     <div id="postconditions-list">
                         <input type="text" class="postcondition-input">
                     </div>
                     <button type="button" id="add-postcondition" class="button">Add Post-Condition</button>
+
+                    <label for="variables-list">Test Variables</label>
+                    <div id="variables-list">
+                        <div class="condition-row">
+                            <input type="text" class="variable-input" placeholder="Enter Variable Name">
+                            <div class="condition-buttons">
+                                <button type="button" class="button" onclick="deleteTestCondition(this)">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="add-variable" class="button">Add Variable</button>
 
                     <label for="test-steps">Steps</label>
                     <div id="steps-list"></div>
@@ -89,6 +106,15 @@
             </section>
         </section>
     </main>
+    <div id="variables-panel" class="variables-panel hidden">
+        <div class="variables-header">
+            <h3>Available Variables</h3>
+            <button onclick="toggleVariablesPanel()" class="close-button">&times;</button>
+        </div>
+        <div id="variables-list-panel" class="variables-list-panel">
+            <!-- Variables will be listed here -->
+        </div>
+    </div>
     <footer>
         <button id="viewer-button" class="button">Open Viewer</button>
     </footer>
