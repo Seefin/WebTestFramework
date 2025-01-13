@@ -206,6 +206,18 @@ button:hover {
     border-radius: 4px;
     margin-bottom: 0.5rem;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.variable-item:hover:not(.disabled) {
+    background: #e0f7fa;
+}
+
+.variable-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #ccc;
+    color: #666;
 }
 
 .variable-item:hover {
@@ -216,28 +228,35 @@ button:hover {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    width: 100%;
 }
 
-.input-group input {
+.input-group input,
+.input-group textarea {
     flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+    margin-bottom: 0;
 }
-/* 
+
 .insert-variable-button {
-    background: #004d40;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem;
-    cursor: pointer;
-    position: relative;
-} */
+    flex-shrink: 0; /* Prevents button from shrinking */
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Add this */
+}
 
 .tooltip {
     position: absolute;
-    bottom: 100%;
+    bottom: 120%; /* Adjust this */
     left: 50%;
     transform: translateX(-50%);
     background: #004d40;
+    color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.8rem;
@@ -245,8 +264,10 @@ button:hover {
     opacity: 0;
     transition: opacity 0.2s;
     pointer-events: none;
+    z-index: 1001; /* Add this */
 }
 
 .insert-variable-button:hover .tooltip {
     opacity: 1;
+    visibility: visible; /* Add this */
 }

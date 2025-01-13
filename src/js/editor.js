@@ -273,20 +273,22 @@ function clearProcedureForm() {
 function clearTestForm() {
     document.getElementById(ELEMENT_IDS.TEST_FORM).reset();
     document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).innerHTML = `
-    <div class="condition-row">
+    <div class="input-group">
         <input type="text" class="precondition-input">
-        <div class="condition-buttons">
-            <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
-        </div>
+        <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+            <span class="tooltip">Insert Variable</span>
+            {{x}}
+        </button>
     </div>
     `;
     document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST).innerHTML = `
-        <div class="condition-row">
-            <input type="text" class="postcondition-input">
-            <div class="condition-buttons">
-                <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
-            </div>
-        </div>
+    <div class="input-group">
+        <input type="text" class="postcondition-input">
+        <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+            <span class="tooltip">Insert Variable</span>
+            {{x}}
+        </button>
+    </div>
     `;
 
     document.getElementById(ELEMENT_IDS.VARIABLES_LIST).innerHTML = `
@@ -347,19 +349,31 @@ function editTest(index) {
     preList.innerHTML = test["Test Preconditions"]
         .map((pre) => `
             <div class="condition-row">
-                <input type="text" class="precondition-input" value="${pre}">
+                <div class="input-group">
+                    <input type="text" class="precondition-input" value="${pre}">
+                    <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+                        <span class="tooltip">Insert Variable</span>
+                        {{x}}
+                    </button>
+                </div>
                 <div class="condition-buttons">
                     <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
                 </div>
             </div>
-            `)
+        `)
         .join('');
 
     const postList = document.getElementById(ELEMENT_IDS.POSTCONDITIONS_LIST);
     postList.innerHTML = test["Test Postconditions"]
         .map((post) => `
             <div class="condition-row">
-                <input type="text" class="postcondition-input" value="${post}">
+                <div class="input-group">
+                    <input type="text" class="postcondition-input" value="${post}">
+                    <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+                        <span class="tooltip">Insert Variable</span>
+                        {{x}}
+                    </button>
+                </div>
                 <div class="condition-buttons">
                     <button type="button" onclick="deleteTestCondition(this)" class="button">Delete</button>
                 </div>
@@ -429,8 +443,7 @@ function toggleVariablesPanel() {
 
 function showVariablesPicker(button) {
     const input = button.previousElementSibling;
-    const panel = document.getElementById(ELEMENT_IDS.VARIABLES_PANEL);
-    panel.classList.remove('hidden');
+    toggleVariablesPanel();
     
     // Highlight the input being edited
     document.querySelectorAll('.input-group input').forEach(inp => 
@@ -442,25 +455,48 @@ function showVariablesPicker(button) {
 
 function renderAvailableVariables() {
     const variablesList = document.getElementById(ELEMENT_IDS.VARIABLES_LIST_PANEL);
-    const allVariables = new Set();
+    const variables = [];
     
-    // Collect variables from all tests
-    currentTests.forEach(test => {
+
+    // Get current test index (if editing)
+    const testIndex = currentTestIndex;
+    
+    // Collect variables with their source test index
+    currentTests.forEach((test, index) => {
         if (test["Test Variables"]) {
-            test["Test Variables"].forEach(v => allVariables.add(v));
+            test["Test Variables"].forEach(v => {
+                variables.push({
+                    name: v,
+                    sourceIndex: index,
+                    available: testIndex !== undefined ? index <= testIndex : false
+                });
+            });
         }
     });
     
-    // Add variables from current test form
-    Array.from(document.querySelectorAll('.variable-input'))
-        .map(input => input.value)
-        .filter(Boolean)
-        .forEach(v => allVariables.add(v));
+    // Add variables from current test form if editing a test
+    if (testIndex !== undefined) {
+        Array.from(document.querySelectorAll('.variable-input'))
+            .map(input => input.value)
+            .filter(Boolean)
+            .forEach(v => {
+                variables.push({
+                    name: v,
+                    sourceIndex: testIndex,
+                    available: true
+                });
+            });
+    }
     
-    variablesList.innerHTML = Array.from(allVariables)
+    // Render variables list with proper availability check
+    variablesList.innerHTML = variables
+        .filter((v, i, arr) => arr.findIndex(item => item.name === v.name) === i) // Remove duplicates
+        .sort((a, b) => a.sourceIndex - b.sourceIndex)
         .map(variable => `
-            <div class="variable-item" onclick="insertVariable('${variable}')">
-                {{${variable}}}
+            <div class="variable-item ${variable.available ? '' : 'disabled'}"
+                 ${variable.available ? `onclick="insertVariable('${variable.name}')"` : ''}
+                 title="${variable.available ? 'Click to insert' : 'Variable not available - defined in a later test'}">
+                {{${variable.name}}}
             </div>
         `).join('');
 }
