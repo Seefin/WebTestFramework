@@ -98,13 +98,35 @@
                 <h2>Edit Step</h2>
                 <form id="step-form">
                     <label for="step-number">Step Number</label>
-                    <input type="number" id="step-number" required min="1">
+                    <div class="input-group">
+                        <input type="number" id="step-number" required min="1">
+                    </div>
 
                     <label for="step-name">Step Name</label>
-                    <input type="text" id="step-name" required>
+                    <div class="input-group">
+                        <input type="text" id="step-name" required>
+                    </div>
 
                     <label for="step-description">Step Details</label>
-                    <textarea id="step-description" required></textarea>
+                    <div class="input-group">
+                        <textarea id="step-description" required></textarea>
+                        <button type="button" class="button insert-variable-button" onclick="showNotePicker(this)">
+                            <span class="tooltip">Insert Note Reference</span>
+                            [[N]]
+                        </button>
+                    </div>
+
+                    <div class="note-section">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="step-require-note">
+                            <label for="step-require-note">Require Note</label>
+                        </div>
+                        
+                        <div id="note-prompt-group" class="hidden">
+                            <label for="step-note-prompt">Note Prompt</label>
+                            <input type="text" id="step-note-prompt" placeholder="Enter prompt for the note">
+                        </div>
+                    </div>
 
                     <button type="submit" class="button">Save Step</button>
                     <button type="button" id="cancel-step" class="button">Cancel</button>
@@ -112,13 +134,20 @@
             </section>
         </section>
     </main>
+    <!-- Update variables panel -->
     <div id="variables-panel" class="variables-panel hidden">
         <div class="variables-header">
-            <h3>Available Variables</h3>
+            <div id="panel-tabs" class="panel-tabs">
+                <button id="variables-tab" class="tab-button active" onclick="switchPanelTab('variables')">Variables</button>
+                <button id="notes-tab" class="tab-button" onclick="switchPanelTab('notes')">Notes</button>
+            </div>
             <button onclick="toggleVariablesPanel()" class="close-button">&times;</button>
         </div>
-        <div id="variables-list-panel" class="variables-list-panel">
+        <div id="variables-list-panel" class="panel-content">
             <!-- Variables will be listed here -->
+        </div>
+        <div id="notes-list-panel" class="panel-content hidden">
+            <!-- Notes will be listed here -->
         </div>
     </div>
     <footer>

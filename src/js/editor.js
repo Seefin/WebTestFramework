@@ -41,6 +41,13 @@ const MESSAGES = {
  * @property {string} VARIABLES_LIST - The ID of the variables list element.
  * @property {string} VARIABLES_PANEL - The ID of the variables panel element.
  * @property {string} VARIABLES_LIST_PANEL - The ID of the variables list panel element.
+ * @property {string} STEP_REQUIRE_NOTE - The ID of the step require note element.
+ * @property {string} STEP_NOTE_PROMPT - The ID of the step note prompt element.
+ * @property {string} NOTE_PROMPT_GROUP - The ID of the note prompt group element.
+ * @property {string} PANEL_TABS - The ID of the panel tabs element.
+ * @property {string} NOTES_LIST_PANEL - The ID of the notes list panel element.
+ * @property {string} VARIABLES_TAB - The ID of the variables tab element.
+ * @property {string} NOTES_TAB - The ID of the notes tab element.
  */
 const ELEMENT_IDS = {
     EDITOR_FORM: 'editor-form',
@@ -65,7 +72,14 @@ const ELEMENT_IDS = {
     TEST_STEPS: 'test-steps',
     VARIABLES_LIST: 'variables-list',
     VARIABLES_PANEL: 'variables-panel',
-    VARIABLES_LIST_PANEL: 'variables-list-panel'
+    VARIABLES_LIST_PANEL: 'variables-list-panel',
+    STEP_REQUIRE_NOTE: 'step-require-note',
+    STEP_NOTE_PROMPT: 'step-note-prompt',
+    NOTE_PROMPT_GROUP: 'note-prompt-group',
+    PANEL_TABS: 'panel-tabs',
+    NOTES_LIST_PANEL: 'notes-list-panel',
+    VARIABLES_TAB: 'variables-tab',
+    NOTES_TAB: 'notes-tab'
 }
 /**
  * Array of all tests in the current procedure.
@@ -127,6 +141,7 @@ document.getElementById('back-to-landing').addEventListener('click', () => {
 
 document.getElementById('add-test').addEventListener('click', () => {
     clearTestForm();
+    currentSteps = []; // Redundant but safe
     document.getElementById(ELEMENT_IDS.TEST_FORM).reset();
     document.getElementById(ELEMENT_IDS.EDITOR_FORM).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.remove('hidden');
@@ -203,11 +218,24 @@ document.getElementById('add-variable').addEventListener('click', () => {
 document.getElementById(ELEMENT_IDS.STEP_FORM).addEventListener('submit', (e) => {
     e.preventDefault();
 
+    const requireNote = document.getElementById(ELEMENT_IDS.STEP_REQUIRE_NOTE).checked;
     const step = {
         step: parseInt(document.getElementById(ELEMENT_IDS.STEP_NUMBER).value, 10),
         stepName: document.getElementById(ELEMENT_IDS.STEP_NAME).value,
-        description: document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).value
+        description: document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).value,
+        requireNote: requireNote
     };
+
+    if (requireNote) {
+        step.notePrompt = document.getElementById(ELEMENT_IDS.STEP_NOTE_PROMPT).value;
+    }
+
+    // Preserve existing referenceNote if it exists
+    if (currentStepIndex !== undefined && 
+        currentSteps[currentStepIndex] && 
+        currentSteps[currentStepIndex].referenceNote) {
+        step.referenceNote = currentSteps[currentStepIndex].referenceNote;
+    }
 
     if (currentStepIndex !== undefined) {
         currentSteps[currentStepIndex] = step;
@@ -217,10 +245,10 @@ document.getElementById(ELEMENT_IDS.STEP_FORM).addEventListener('submit', (e) =>
     }
 
     currentSteps.sort((a, b) => a.step - b.step);
-
+    renderSteps();
+    
     document.getElementById(ELEMENT_IDS.STEP_EDITOR).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.remove('hidden');
-    renderSteps();
 });
 
 document.getElementById('add-step').addEventListener('click', () => {
@@ -233,6 +261,14 @@ document.getElementById('add-step').addEventListener('click', () => {
 document.getElementById('cancel-step').addEventListener('click', () => {
     document.getElementById(ELEMENT_IDS.STEP_EDITOR).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.remove('hidden');
+});
+
+document.getElementById(ELEMENT_IDS.STEP_REQUIRE_NOTE).addEventListener('change', (e) => {
+    const promptGroup = document.getElementById(ELEMENT_IDS.NOTE_PROMPT_GROUP);
+    promptGroup.classList.toggle('hidden', !e.target.checked);
+    if (!e.target.checked) {
+        document.getElementById(ELEMENT_IDS.STEP_NOTE_PROMPT).value = '';
+    }
 });
 
 // LOAD and STORE code
@@ -270,8 +306,13 @@ function clearProcedureForm() {
     document.getElementById(ELEMENT_IDS.METADATA_FORM).reset();
 }
 
+// Update clearTestForm function
 function clearTestForm() {
     document.getElementById(ELEMENT_IDS.TEST_FORM).reset();
+    // Clear steps
+    currentSteps = [];
+    document.getElementById(ELEMENT_IDS.STEP_LIST).innerHTML = '';
+    
     document.getElementById(ELEMENT_IDS.PRECONDITIONS_LIST).innerHTML = `
     <div class="input-group">
         <input type="text" class="precondition-input">
@@ -334,6 +375,11 @@ function renderSteps() {
                 </div>
             </div>
             <div class="step-description">${step.description}</div>
+            ${step.requireNote ? `
+                <div class="step-note-info">
+                    <span>📝 Requires note: ${step.notePrompt}</span>
+                </div>
+            ` : ''}
         </div>
     `).join('');
 }
@@ -415,16 +461,44 @@ function deleteTestCondition(button) {
 // Step CRUD code
 function editStep(button) {
     const card = button.closest('.step-card');
-    const step = currentSteps.find(step => step.step === parseInt(card.dataset.stepNumber) && step.stepName === card.dataset.stepName);
-    if (!step) {
-        return;
-    }
-    currentStepIndex = currentSteps.indexOf(step);
-    document.getElementById(ELEMENT_IDS.STEP_NUMBER).value = step.step;
-    document.getElementById(ELEMENT_IDS.STEP_NAME).value = step.stepName;
-    document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).value = step.description;
+    const step = currentSteps.find(step => 
+        step.step === parseInt(card.dataset.stepNumber) && 
+        step.stepName === card.dataset.stepName
+    );
+    if (!step) return;
+    
+    // Store step data to be used after view switch
+    const stepToEdit = {
+        index: currentSteps.indexOf(step),
+        ...step
+    };
+    
+    // Switch views first
     document.getElementById(ELEMENT_IDS.TEST_EDITOR).classList.add('hidden');
     document.getElementById(ELEMENT_IDS.STEP_EDITOR).classList.remove('hidden');
+    
+    // Wait for next event loop to ensure DOM is updated
+    requestAnimationFrame(() => {
+        initializeStepEditor(stepToEdit);
+    });
+}
+
+function initializeStepEditor(step) {
+    currentStepIndex = step.index;
+    
+    const stepNumber = document.getElementById(ELEMENT_IDS.STEP_NUMBER);
+    const stepName = document.getElementById(ELEMENT_IDS.STEP_NAME);
+    const stepDescription = document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION);
+    const requireNote = document.getElementById(ELEMENT_IDS.STEP_REQUIRE_NOTE);
+    const promptGroup = document.getElementById(ELEMENT_IDS.NOTE_PROMPT_GROUP);
+    const notePrompt = document.getElementById(ELEMENT_IDS.STEP_NOTE_PROMPT);
+    
+    if (stepNumber) stepNumber.value = step.step;
+    if (stepName) stepName.value = step.stepName;
+    if (stepDescription) stepDescription.value = step.description;
+    if (requireNote) requireNote.checked = step.requireNote;
+    if (promptGroup) promptGroup.classList.toggle('hidden', !step.requireNote);
+    if (notePrompt && step.requireNote) notePrompt.value = step.notePrompt;
 }
 
 function deleteStep(button) {
@@ -438,17 +512,43 @@ function deleteStep(button) {
 
 // Add new functions for variable handling
 function toggleVariablesPanel() {
-    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.toggle('hidden');
+    const panel = document.getElementById(ELEMENT_IDS.VARIABLES_PANEL);
+    const isHiding = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    
+    // Reset tab state when closing panel
+    if (isHiding) {
+        resetPanelTabs();
+    }
+}
+
+function resetPanelTabs() {
+    const notesTab = document.getElementById(ELEMENT_IDS.NOTES_TAB);
+    notesTab.disabled = false;
+    notesTab.classList.remove('disabled');
 }
 
 function showVariablesPicker(button) {
     const input = button.previousElementSibling;
-    toggleVariablesPanel();
+    const isConditionInput = input.classList.contains('precondition-input') || 
+                            input.classList.contains('postcondition-input');
+    
+    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.remove('hidden');
     
     // Highlight the input being edited
-    document.querySelectorAll('.input-group input').forEach(inp => 
+    document.querySelectorAll('.input-group input, .input-group textarea').forEach(inp => 
         inp.classList.remove('active-input'));
     input.classList.add('active-input');
+    
+    // Enable/disable notes tab based on input type
+    const notesTab = document.getElementById(ELEMENT_IDS.NOTES_TAB);
+    notesTab.disabled = isConditionInput;
+    notesTab.classList.toggle('disabled', isConditionInput);
+    
+    // Switch to variables tab if notes tab is disabled
+    if (isConditionInput) {
+        switchPanelTab('variables');
+    }
     
     renderAvailableVariables();
 }
@@ -457,9 +557,8 @@ function renderAvailableVariables() {
     const variablesList = document.getElementById(ELEMENT_IDS.VARIABLES_LIST_PANEL);
     const variables = [];
     
-
-    // Get current test index (if editing)
-    const testIndex = currentTestIndex;
+    // Fix: Variables should be available when adding a new test
+    const testIndex = currentTestIndex === undefined ? currentTests.length : currentTestIndex;
     
     // Collect variables with their source test index
     currentTests.forEach((test, index) => {
@@ -468,25 +567,24 @@ function renderAvailableVariables() {
                 variables.push({
                     name: v,
                     sourceIndex: index,
-                    available: testIndex !== undefined ? index <= testIndex : false
+                    // Fix: Make variables available for new tests
+                    available: index <= testIndex
                 });
             });
         }
     });
     
-    // Add variables from current test form if editing a test
-    if (testIndex !== undefined) {
-        Array.from(document.querySelectorAll('.variable-input'))
-            .map(input => input.value)
-            .filter(Boolean)
-            .forEach(v => {
-                variables.push({
-                    name: v,
-                    sourceIndex: testIndex,
-                    available: true
-                });
+    // Add variables from current test form
+    Array.from(document.querySelectorAll('.variable-input'))
+        .map(input => input.value)
+        .filter(Boolean)
+        .forEach(v => {
+            variables.push({
+                name: v,
+                sourceIndex: testIndex,
+                available: true
             });
-    }
+        });
     
     // Render variables list with proper availability check
     variablesList.innerHTML = variables
@@ -531,3 +629,115 @@ function updateInputWithVariableButton(input) {
     button.onclick = () => showVariablesPicker(button);
     group.appendChild(button);
 }
+
+function switchPanelTab(tab) {
+    document.getElementById(ELEMENT_IDS.VARIABLES_TAB).classList.toggle('active', tab === 'variables');
+    document.getElementById(ELEMENT_IDS.NOTES_TAB).classList.toggle('active', tab === 'notes');
+    document.getElementById(ELEMENT_IDS.VARIABLES_LIST_PANEL).classList.toggle('hidden', tab !== 'variables');
+    document.getElementById(ELEMENT_IDS.NOTES_LIST_PANEL).classList.toggle('hidden', tab !== 'notes');
+    
+    if (tab === 'variables') {
+        renderAvailableVariables();
+    } else {
+        renderAvailableNotes();
+    }
+}
+
+function showNotePicker(button) {
+    const input = button.previousElementSibling;
+    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.remove('hidden');
+    
+    document.querySelectorAll('.input-group textarea').forEach(inp => 
+        inp.classList.remove('active-input'));
+    input.classList.add('active-input');
+    
+    // Enable notes tab for step description
+    const notesTab = document.getElementById(ELEMENT_IDS.NOTES_TAB);
+    notesTab.disabled = false;
+    notesTab.classList.remove('disabled');
+    
+    switchPanelTab('notes');
+}
+
+function renderAvailableNotes() {
+    const notesList = document.getElementById(ELEMENT_IDS.NOTES_LIST_PANEL);
+    const notes = [];
+    
+    // Fix: Use same logic as variables for new tests
+    const testIndex = currentTestIndex === undefined ? currentTests.length : currentTestIndex;
+    
+    // Get notes from previous tests
+    for (let i = 0; i < testIndex; i++) {
+        const test = currentTests[i];
+        if (test["Test Steps"]) {
+            test["Test Steps"]
+                .filter(step => step.requireNote)
+                .forEach(step => {
+                    notes.push({
+                        testName: test["Test Name"],
+                        stepName: step.stepName,
+                        prompt: step.notePrompt,
+                        available: true
+                    });
+                });
+        }
+    }
+    
+    // Get notes from current test's previous steps
+    if (currentTestIndex !== undefined) {
+        const currentStepNumber = parseInt(document.getElementById(ELEMENT_IDS.STEP_NUMBER).value, 10);
+        currentSteps
+            .filter(step => step.requireNote && step.step < currentStepNumber)
+            .forEach(step => {
+                notes.push({
+                    testName: currentTests[currentTestIndex]["Test Name"],
+                    stepName: step.stepName,
+                    prompt: step.notePrompt,
+                    available: true
+                });
+            });
+    }
+    
+    notesList.innerHTML = notes.map(note => `
+        <div class="note-item" onclick="insertNoteReference('${note.testName}', '${note.stepName}')">
+            <div class="note-item-title">${note.testName} - ${note.stepName}</div>
+            <div class="note-item-prompt">${note.prompt}</div>
+        </div>
+    `).join('');
+}
+
+function insertNoteReference(testName, stepName) {
+    const activeInput = document.querySelector('.active-input');
+    if (!activeInput) return;
+    
+    const cursorPos = activeInput.selectionStart;
+    const textBefore = activeInput.value.substring(0, cursorPos);
+    const textAfter = activeInput.value.substring(cursorPos);
+    
+    activeInput.value = `${textBefore}[[note]]${textAfter}`;
+    
+    // Add reference to current step
+    if (currentStepIndex !== undefined) {
+        if (!currentSteps[currentStepIndex]) {
+            currentSteps[currentStepIndex] = {};
+        }
+        currentSteps[currentStepIndex].referenceNote = {
+            testName: testName,
+            stepName: stepName
+        };
+    }
+    
+    activeInput.classList.remove('active-input');
+    document.getElementById(ELEMENT_IDS.VARIABLES_PANEL).classList.add('hidden');
+}
+
+// Update step editor form to include note picker button
+document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).parentElement.innerHTML = `
+    <div class="input-group">
+        <textarea id="${ELEMENT_IDS.STEP_DESCRIPTION}" required></textarea>
+        <button type="button" class="button insert-variable-button" onclick="showNotePicker(this)">
+            <span class="tooltip">Insert Note Reference</span>
+            [[N]]
+        </button>
+    </div>
+`;

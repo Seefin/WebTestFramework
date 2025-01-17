@@ -1,0 +1,214 @@
+{
+    "$schema": "https://test.findlays.io/public/WebTestFramework.json",
+    "Test Procedure": "TP 02 - Test Editor Functionality",
+    "Updated": "2024-03-19",
+    "Author": "Connor F",
+    "Description": "Tests functionality of the WTF Editor interface",
+    "Tests": [
+        {
+            "Test Name": "Create New Test Procedure",
+            "Test Preconditions": [
+                "WTF Editor is open",
+                "No procedure is currently loaded"
+            ],
+            "Test Postconditions": [
+                "New procedure is created with name {{procName}}",
+                "Today's date is shown in Updated field",
+                "Author field contains {{authorName}}"
+            ],
+            "Test Variables": [
+                "procName",
+                "authorName"
+            ],
+            "Test Steps": [
+                {
+                    "step": 1,
+                    "stepName": "Click Create New",
+                    "description": "Click 'Create New Test Procedure' button",
+                    "requireNote": false
+                },
+                {
+                    "step": 2,
+                    "stepName": "Enter Procedure Details",
+                    "description": "Enter procedure name '{{procName}}' and author '{{authorName}}'. Description should be 'Test procedure for editor testing'",
+                    "requireNote": true,
+                    "notePrompt": "Record the procedure name exactly as entered"
+                }
+            ]
+        },
+        {
+            "Test Name": "Add First Test",
+            "Test Preconditions": [
+                "Procedure {{procName}} is open in editor",
+                "No tests exist yet"
+            ],
+            "Test Postconditions": [
+                "Test with name {{testName}} exists",
+                "Test has precondition using variable {{varName}}"
+            ],
+            "Test Variables": [
+                "procName",
+                "testName",
+                "varName"
+            ],
+            "Test Steps": [
+                {
+                    "step": 1,
+                    "stepName": "Click Add Test",
+                    "description": "Click 'Add Test' button"
+                },
+                {
+                    "step": 2,
+                    "stepName": "Enter Test Name",
+                    "description": "Enter test name '{{testName}}'",
+                    "requireNote": true,
+                    "notePrompt": "Record the test name exactly as entered"
+                },
+                {
+                    "step": 3,
+                    "stepName": "Add Variable",
+                    "description": "Click 'Add Variable' button and enter '{{varName}}'"
+                },
+                {
+                    "step": 4,
+                    "stepName": "Add Precondition",
+                    "description": "Click 'Add Pre-Condition' button. In the new input, click variable button and select {{varName}}"
+                },
+                {
+                    "step": 5,
+                    "stepName": "Save Test",
+                    "description": "Click 'Save Test' button"
+                }
+            ]
+        },
+        {
+            "Test Name": "Add Steps to Test",
+            "Test Preconditions": [
+                "Test {{testName}} exists and is open for editing"
+            ],
+            "Test Postconditions": [
+                "Test has three steps",
+                "Steps are ordered correctly"
+            ],
+            "Test Variables": [
+                "testName"
+            ],
+            "Test Steps": [
+                {
+                    "step": 1,
+                    "stepName": "Add First Step",
+                    "description": "Click 'Add Step' button. Enter step number 1, name 'First Step', description 'This is step one'",
+                    "requireNote": true,
+                    "notePrompt": "Record the first step name"
+                },
+                {
+                    "step": 2,
+                    "stepName": "Add Second Step with Note",
+                    "description": "Click 'Add Step' button. Enter step number 2, name 'Note Step', description 'This step needs a note'. Check 'Require Note' and enter prompt 'Enter test note here'",
+                    "requireNote": true,
+                    "notePrompt": "Record the second step name"
+                },
+                {
+                    "step": 3,
+                    "stepName": "Add Third Step with Reference",
+                    "description": "Click 'Add Step' button. Enter step number 3, name 'Reference Step'. Click note button and select note from [[note]] step. Enter description 'Check the note from step 2'",
+                    "referenceNote": {
+                        "testName": "Add Steps to Test",
+                        "stepName": "Add Second Step with Note"
+                    }
+                },
+                {
+                    "step": 4,
+                    "stepName": "Reorder Steps",
+                    "description": "Edit step 3 and change its number to 2. Edit previous step 2 and change its number to 3"
+                }
+            ]
+        },
+        {
+            "Test Name": "Edit Existing Test",
+            "Test Preconditions": [
+                "Test {{testName}} exists with steps"
+            ],
+            "Test Postconditions": [
+                "Test name is updated to {{newTestName}}",
+                "New variable {{newVar}} is added",
+                "New precondition uses {{newVar}}"
+            ],
+            "Test Variables": [
+                "testName",
+                "newTestName",
+                "newVar"
+            ],
+            "Test Steps": [
+                {
+                    "step": 1,
+                    "stepName": "Open Test",
+                    "description": "Click 'Edit' button on test {{testName}}"
+                },
+                {
+                    "step": 2,
+                    "stepName": "Update Name",
+                    "description": "Change test name to {{newTestName}}"
+                },
+                {
+                    "step": 3,
+                    "stepName": "Add Variable",
+                    "description": "Add new variable {{newVar}}"
+                },
+                {
+                    "step": 4,
+                    "stepName": "Add Precondition",
+                    "description": "Add precondition using {{newVar}}"
+                },
+                {
+                    "step": 5,
+                    "stepName": "Save Changes",
+                    "description": "Click 'Save Test' button",
+                    "requireNote": true,
+                    "notePrompt": "Verify the new test name is shown in the test list"
+                }
+            ]
+        },
+        {
+            "Test Name": "Delete Test Components",
+            "Test Preconditions": [
+                "Test {{newTestName}} exists with multiple steps"
+            ],
+            "Test Postconditions": [
+                "First step is deleted",
+                "One precondition is deleted",
+                "One variable is deleted"
+            ],
+            "Test Variables": [
+                "newTestName"
+            ],
+            "Test Steps": [
+                {
+                    "step": 1,
+                    "stepName": "Open Test",
+                    "description": "Click 'Edit' button on test {{newTestName}}"
+                },
+                {
+                    "step": 2,
+                    "stepName": "Delete Step",
+                    "description": "Click 'Delete' button on first step. Confirm deletion"
+                },
+                {
+                    "step": 3,
+                    "stepName": "Delete Precondition",
+                    "description": "Click 'Delete' button on first precondition"
+                },
+                {
+                    "step": 4,
+                    "stepName": "Delete Variable",
+                    "description": "Click 'Delete' button on first variable"
+                },
+                {
+                    "step": 5,
+                    "stepName": "Save Changes",
+                    "description": "Click 'Save Test' button"
+                }
+            ]
+        }
+    ]
+}
