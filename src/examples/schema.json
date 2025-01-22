@@ -55,6 +55,10 @@
                                 "description": {
                                     "type": "string"
                                 },
+                                "outcome": {
+                                    "type": "string",
+                                    "description": "Expected outcome of the step"
+                                },
                                 "requireNote": {
                                     "type": "boolean"
                                 },
@@ -74,7 +78,7 @@
                                     "required": ["testName", "stepName"]
                                 }
                             },
-                            "required": ["step", "stepName", "description"]
+                            "required": ["step", "stepName", "description", "outcome"]
                         }
                     }
                 },

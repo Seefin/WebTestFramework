@@ -24,16 +24,21 @@ A browser-based tool for executing and documenting manual test procedures. This 
 
 ## Installation
 
+Because everything is client-side, you can host this anywhere. At it's most basic:
+
 1. Download the repository
 2. Maintain the following directory structure:
 ```
 web-test-framework/
 ├── src/
 │   ├── css/
-│   │   └── main.css
+│   │   ├── main.css
+│   │   └── editor.css
 │   ├── js/
-│   │   └── main.js
-│   └── index.html
+│   │   ├── main.js
+│   │   └── editor.js
+│   ├── index.html
+│   └── editor.html
 ```
 3. Open `index.html` in a browser.
 
