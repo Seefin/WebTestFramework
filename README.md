@@ -13,6 +13,14 @@ A browser-based tool for executing and documenting manual test procedures. This 
 - Detailed test statistics and reporting
 - Print-ready report generation
 - Offline-first design - no internet connection required
+- Create and edit test procedures through a GUI interface
+- Add, edit, and delete tests
+- Manage test steps with descriptions and expected outcomes
+- Define variables for use across tests
+- Set up note collection requirements
+- Reference previously collected notes in later steps
+- Reorder steps by changing step numbers
+- Save and load test procedures as JSON files
 
 ## Installation
 
@@ -56,6 +64,18 @@ After completing tests, you'll see:
 - Detailed step status
 - All collected notes
 - Printable report with signature line
+
+### Test Editor
+The editor allows creation and modification of test procedures:
+1. Create new or load existing test procedure
+2. Add tests with pre/post conditions and variables
+3. Add steps to tests with:
+   - Step number (for ordering)
+   - Description and expected outcome
+   - Note collection requirements
+   - Variable substitution
+   - References to previously collected notes
+4. Save procedure as JSON file
 
 ## Privacy & Data Storage
 - All data stays on your local machine
@@ -108,6 +128,26 @@ opened by clicking the **Notes** button on the right of the screen.
 ![Create Note](src/img/noteCreate.png)
 
 ![View Note](src/img/noteExpand.png)
+
+### Editor Screenshots
+
+#### Editor Landing
+![Editor Landing](src/img/editorLanding.png)
+
+#### Procedure Editor
+![Procedure Editor](src/img/procedureEditor.png)
+
+#### Test Editor
+![Test Editor](src/img/testEditor.png)
+
+#### Step Editor
+![Step Editor](src/img/stepEditor.png)
+
+#### Variable Insertion
+![Variable Picker](src/img/variablePicker.png)
+
+#### Note Reference
+![Note Reference](src/img/noteReference.png)
 
 ## License
 GNU General Public License v3.0
