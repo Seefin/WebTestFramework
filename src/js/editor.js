@@ -48,6 +48,7 @@ const MESSAGES = {
  * @property {string} NOTES_LIST_PANEL - The ID of the notes list panel element.
  * @property {string} VARIABLES_TAB - The ID of the variables tab element.
  * @property {string} NOTES_TAB - The ID of the notes tab element.
+ * @property {string} STEP_OUTCOME - The ID of the step outcome element.
  */
 const ELEMENT_IDS = {
     EDITOR_FORM: 'editor-form',
@@ -79,7 +80,8 @@ const ELEMENT_IDS = {
     PANEL_TABS: 'panel-tabs',
     NOTES_LIST_PANEL: 'notes-list-panel',
     VARIABLES_TAB: 'variables-tab',
-    NOTES_TAB: 'notes-tab'
+    NOTES_TAB: 'notes-tab',
+    STEP_OUTCOME: 'step-outcome'
 }
 /**
  * Array of all tests in the current procedure.
@@ -223,6 +225,7 @@ document.getElementById(ELEMENT_IDS.STEP_FORM).addEventListener('submit', (e) =>
         step: parseInt(document.getElementById(ELEMENT_IDS.STEP_NUMBER).value, 10),
         stepName: document.getElementById(ELEMENT_IDS.STEP_NAME).value,
         description: document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION).value,
+        outcome: document.getElementById(ELEMENT_IDS.STEP_OUTCOME).value,
         requireNote: requireNote
     };
 
@@ -343,7 +346,11 @@ function clearTestForm() {
 }
 
 function clearStepForm() {
-    document.getElementById('step-form').reset();
+    document.getElementById(ELEMENT_IDS.STEP_FORM).reset();
+    document.getElementById(ELEMENT_IDS.STEP_OUTCOME).value = ''; // Add this
+    document.getElementById(ELEMENT_IDS.STEP_REQUIRE_NOTE).checked = false;
+    document.getElementById(ELEMENT_IDS.NOTE_PROMPT_GROUP).classList.add('hidden');
+    document.getElementById(ELEMENT_IDS.STEP_NOTE_PROMPT).value = '';
 }
 
 // Render Components
@@ -375,6 +382,7 @@ function renderSteps() {
                 </div>
             </div>
             <div class="step-description">${step.description}</div>
+            <div class="step-outcome">Expected: ${step.outcome}</div>
             ${step.requireNote ? `
                 <div class="step-note-info">
                     <span>📝 Requires note: ${step.notePrompt}</span>
@@ -489,6 +497,7 @@ function initializeStepEditor(step) {
     const stepNumber = document.getElementById(ELEMENT_IDS.STEP_NUMBER);
     const stepName = document.getElementById(ELEMENT_IDS.STEP_NAME);
     const stepDescription = document.getElementById(ELEMENT_IDS.STEP_DESCRIPTION);
+    const stepOutcome = document.getElementById(ELEMENT_IDS.STEP_OUTCOME); // Add this
     const requireNote = document.getElementById(ELEMENT_IDS.STEP_REQUIRE_NOTE);
     const promptGroup = document.getElementById(ELEMENT_IDS.NOTE_PROMPT_GROUP);
     const notePrompt = document.getElementById(ELEMENT_IDS.STEP_NOTE_PROMPT);
@@ -496,6 +505,7 @@ function initializeStepEditor(step) {
     if (stepNumber) stepNumber.value = step.step;
     if (stepName) stepName.value = step.stepName;
     if (stepDescription) stepDescription.value = step.description;
+    if (stepOutcome) stepOutcome.value = step.outcome || ''; // Add this
     if (requireNote) requireNote.checked = step.requireNote;
     if (promptGroup) promptGroup.classList.toggle('hidden', !step.requireNote);
     if (notePrompt && step.requireNote) notePrompt.value = step.notePrompt;

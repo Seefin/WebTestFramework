@@ -354,3 +354,11 @@ button:hover {
     cursor: not-allowed;
     border-color: #ccc;
 }
+
+.step-outcome {
+    color: #004d40;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #004d40;
+}

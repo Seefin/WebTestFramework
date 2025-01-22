@@ -444,3 +444,28 @@ input[type="file"] {
 #status-modal .radio-label:hover input[type="radio"] {
     border-color: #0056b3;
 }
+
+.step .step-outcome {
+    color: #004d40;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid #004d40;
+    background-color: #f5f5f5;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Add to template styles */
+.step-template style {
+    .step-outcome {
+        color: #004d40;
+        font-size: 0.9rem;
+        margin: 0.5rem 0;
+        padding-left: 1rem;
+        border-left: 3px solid #004d40;
+        background-color: #f5f5f5;
+        padding: 0.5rem 0.5rem 0.5rem 1rem;
+        border-radius: 0 4px 4px 0;
+    }
+}

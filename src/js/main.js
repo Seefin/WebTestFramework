@@ -31,6 +31,7 @@ class StepElement extends HTMLElement {
         //Update the content of the shadow DOM copy with this element's info
         this.shadowRoot.querySelector('h3').textContent = `${this.stepName}`;
         this.shadowRoot.querySelector('p').textContent = `${this.stepDescription}`;
+        this.shadowRoot.querySelector('.step-outcome').textContent = `Expected: ${this.stepOutcome}`;
 
         //Get references to the buttons for later use
         this.nextButton = this.shadowRoot.querySelector('.next-step');
@@ -43,6 +44,7 @@ class StepElement extends HTMLElement {
     set stepData(data) {
         this.stepName = data.stepName;
         this.stepDescription = data.description;
+        this.stepOutcome = data.outcome || '';
     }
     /**
     * @returns {string}
@@ -249,6 +251,7 @@ function showStep(index) {
         const stepElement = document.createElement('step-element');
         const stepData = { ...currentTest["Test Steps"][index] };
         stepData.description = replaceVariables(stepData.description);
+        stepData.outcome = replaceVariables(stepData.outcome);
         stepElement.stepData = stepData;
 
         //Add the new element to the page
@@ -651,7 +654,7 @@ function replaceVariables(text) {
     const selectedTest = tests[selectedTests[currentTestIndex]];
     const currentStep = selectedTest["Test Steps"][currentStepIndex];
     
-    if (currentStep.referenceNote) {
+    if (currentStep && currentStep.referenceNote) {
         text = text.replace(/\[\[note\]\]/g, () => {
             return getNoteContent(
                 currentStep.referenceNote.testName,

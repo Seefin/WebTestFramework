@@ -116,6 +116,15 @@
                         </button>
                     </div>
 
+                    <label for="step-outcome">Expected Outcome</label>
+                    <div class="input-group">
+                        <textarea id="step-outcome" required></textarea>
+                        <button type="button" class="button insert-variable-button" onclick="showVariablesPicker(this)">
+                            <span class="tooltip">Insert Variable</span>
+                            {{x}}
+                        </button>
+                    </div>
+
                     <div class="note-section">
                         <div class="checkbox-group">
                             <input type="checkbox" id="step-require-note">
